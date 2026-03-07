@@ -1,5 +1,6 @@
 import { useGameState } from './hooks/useGameState';
 import { SupportCardItem } from './components/SupportCardItem';
+import { FaGithub } from 'react-icons/fa';
 import { StatusToggle } from './components/StatusToggle';
 import { SkillList } from './components/SkillList';
 import { BeyondDreamsSection } from './components/BeyondDreamsSection';
@@ -184,6 +185,17 @@ function App() {
 
       <footer className="app-footer">
         <p>Created by <a href="https://x.com/tagamycom" target="_blank" rel="noopener noreferrer">@tagamycom</a> & Gemini 3.1 Pro</p>
+        <div style={{ marginTop: '0.5rem' }}>
+          <a
+            href="https://github.com/tagamy/uma-planner"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'inherit', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', opacity: 0.8 }}
+          >
+            <FaGithub size={18} />
+            <span>GitHub Repository</span>
+          </a>
+        </div>
       </footer>
     </div>
   );
