@@ -1,0 +1,872 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: #333;
+  background-color: #f1f8ed;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f1f8ed;
+  /* ウマ娘風の薄いグリーンの背景 */
+  color: #333;
+}
+
+#root {
+  width: 100%;
+}
+
+.app-container {
+  max-width: 600px;
+  /* PCブラウザでもスマホ版のように表示するため最大幅を制限 */
+  margin: 0 auto;
+  background-color: #fff;
+  min-height: 100vh;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: linear-gradient(135deg, #74c740, #5da731);
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.app-header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: bold;
+}
+
+.header-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  /* フレックスコンテナ内でのテキストはみ出しを防ぐ */
+  flex: 1;
+  /* タイトルエリアが必要な幅を取りつつ、ボタンの領域を確保 */
+  padding-right: 0.5rem;
+  /* ボタンとの間に最低限の余白を確保 */
+}
+
+.header-subtitle {
+  font-size: 0.75rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.reset-btn {
+  background-color: #fff;
+  color: #5da731;
+  border: none;
+  border-radius: 20px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  /* ボタンが潰れるのを防ぐ */
+  white-space: nowrap;
+  /* テキストの改行を防ぐ */
+}
+
+.app-main {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+  /* メインコンテンツが画面からはみ出ない場合、フッターを下部に押し下げる */
+}
+
+.app-footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.8rem;
+  color: #999;
+  border-top: 1px solid #f0f0f0;
+  margin-top: auto;
+}
+
+.app-footer a {
+  color: #74c740;
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
+.section h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.8rem 0;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid #e0f0d9;
+  color: #2c5e11;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.support-card-item {
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: opacity 0.3s;
+}
+
+.support-card-item.cancelled {
+  opacity: 0.5;
+  background-color: #f0f0f0;
+}
+
+.card-header {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: nowrap;
+  /* 狭い画面でもカードヘッダー内で改行させない */
+}
+
+.custom-type-select {
+  flex-shrink: 0;
+}
+
+.type-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.4rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: white;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 85px;
+  /* 元100px: スマホ表示で改行を防ぐために少し縮小 */
+  justify-content: center;
+  /* 狭くなっても中央寄り */
+}
+
+.type-btn:hover:not(:disabled) {
+  background-color: #f0f0f0;
+}
+
+.type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.75rem;
+}
+
+/* ウマ娘風のアイコン背景色 */
+.type-icon.speed {
+  background-color: #3498db;
+}
+
+/* 青 */
+.type-icon.stamina {
+  background-color: #e74c3c;
+}
+
+/* 赤 */
+.type-icon.power {
+  background-color: #f39c12;
+}
+
+/* オレンジ */
+.type-icon.guts {
+  background-color: #e84393;
+}
+
+/* ピンク */
+.type-icon.wisdom {
+  background-color: #2ecc71;
+}
+
+/* 緑 */
+.type-icon.friend {
+  background-color: #fff8e1;
+  color: #ffa000;
+  border: 1px solid #ffe0b2;
+}
+
+/* 黄色 */
+
+/* 紫 */
+
+.card-name-input {
+  flex: 1;
+  min-width: 0;
+  /* flexアイテムが縮むことを許可する（はみ出し防止） */
+  padding: 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 0.4rem 0.3rem;
+  /* スマホ向けに左右paddingを縮小 */
+  font-size: 0.75rem;
+  white-space: nowrap;
+  /* ボタンテキストの折り返し防止 */
+}
+
+.card-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.2rem;
+}
+
+.progress-label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: bold;
+}
+
+.progress-indicator {
+  display: flex;
+  gap: 0.3rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  flex: 1;
+}
+
+.progress-step {
+  width: 40px;
+  height: 12px;
+  background-color: #d0d0d0;
+  border-radius: 2px;
+  position: relative;
+  clip-path: polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%, 15% 50%);
+  transition: background-color 0.2s;
+}
+
+.progress-step.active {
+  background-color: #fbff00;
+  box-shadow: 0 0 5px rgba(251, 255, 0, 0.5);
+}
+
+.support-card-item.cancelled .progress-step {
+  background-color: #aaa !important;
+}
+
+.status-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  background-color: white;
+  color: #666;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 140px;
+}
+
+.status-toggle-wrapper.failed .status-toggle {
+  opacity: 0.5;
+  background-color: #f0f0f0;
+  border-color: #ccc;
+  color: #999;
+}
+
+.status-toggle-wrapper.failed .toggle-checkbox {
+  background-color: #e0e0e0;
+  border-color: #aaa;
+}
+
+.status-toggle:hover:not(:disabled) {
+  background-color: #f5f5f5;
+}
+
+.status-toggle .toggle-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+}
+
+.status-toggle .checkmark {
+  color: white;
+  font-size: 0.9rem;
+}
+
+/* Event Finished (Gold) */
+.status-toggle.color-gold.active {
+  border-color: #f39c12;
+  background-color: #fff9ed;
+  color: #d35400;
+}
+
+.status-toggle.color-gold.active .toggle-checkbox {
+  background-color: #f39c12;
+  border-color: #f39c12;
+}
+
+/* Plain (White background, gray text) */
+.status-toggle.color-plain.active {
+  border-color: #e0e0e0;
+  background-color: white;
+  color: #666;
+}
+
+/* Acquired Status (Pink / Distinctive) */
+.status-toggle.color-pink {
+  border-width: 3px;
+  border-radius: 20px;
+  /* 少し丸っこくして差別化 */
+}
+
+.status-toggle.color-pink.active {
+  border-color: #e84393;
+  background-color: #fd79a8;
+  color: white;
+  box-shadow: 0 4px 10px rgba(232, 67, 147, 0.3);
+}
+
+.status-toggle.color-pink.active .toggle-checkbox {
+  background-color: white;
+  border-color: white;
+}
+
+.status-toggle.color-pink.active .checkmark {
+  color: #e84393;
+}
+
+/* Aptitude / Default (Green) */
+.status-toggle.color-default.active {
+  border-color: #5da731;
+  background-color: #f1f8ed;
+  color: #2c5e11;
+}
+
+.status-toggle.color-default.active .toggle-checkbox {
+  background-color: #5da731;
+  border-color: #5da731;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Skills Section */
+.skills-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skill-item {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  background-color: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: bold;
+  color: #666;
+}
+
+.skill-item:hover {
+  background-color: #f5f5f5;
+}
+
+.skill-item.acquired {
+  border-color: #3498db;
+  background-color: #ebf5fb;
+  color: #2980b9;
+}
+
+.skill-item-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  margin-right: 0.8rem;
+}
+
+.skill-item.acquired .skill-item-checkbox {
+  background-color: #3498db;
+  border-color: #3498db;
+}
+
+.skill-item .checkmark {
+  color: white;
+  font-size: 0.9rem;
+}
+
+.skill-name {
+  flex: 1;
+}
+
+.skill-remove-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+}
+
+.skill-remove-btn:hover {
+  background-color: #ffeaea;
+  color: #e74c3c;
+}
+
+.add-skill-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.add-skill-input {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.add-skill-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0 1rem;
+  font-weight: bold;
+}
+
+.add-skill-btn:hover {
+  background-color: #2980b9;
+}
+
+/* Beyond Dreams Section */
+.beyond-dreams-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bd-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e0f0d9;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.bd-section-header h2 {
+  border-bottom: none;
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.x-share-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #0f1419;
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.x-share-btn:hover {
+  background-color: #272c30;
+}
+
+.x-share-btn svg {
+  fill: currentColor;
+}
+
+.bd-controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bd-preset-select select {
+  padding: 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+
+.bd-current-levels {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.bd-current-levels h3 {
+  margin: 0 0 0.8rem 0;
+  font-size: 0.95rem;
+  color: #2c5e11;
+  text-align: center;
+}
+
+.bd-level-inputs {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bd-level-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 80px;
+}
+
+.bd-level-box.physical .bd-label {
+  color: #e74c3c;
+}
+
+/* 赤系 */
+.bd-level-box.technique .bd-label {
+  color: #3498db;
+}
+
+/* 青系 */
+.bd-level-box.mental .bd-label {
+  color: #f39c12;
+}
+
+/* 黄/オレンジ系 */
+
+.bd-label {
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.bd-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bd-stepper button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  color: #333;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bd-stepper button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #e0e0e0;
+}
+
+.bd-value {
+  font-weight: bold;
+  font-size: 1.1rem;
+  min-width: 20px;
+  text-align: center;
+}
+
+.bd-targets-table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: white;
+}
+
+.bd-recommendations {
+  background: #fffdf0;
+  border: 1px solid #fcebb6;
+  border-radius: 8px;
+  padding: 0.8rem;
+  box-shadow: 0 2px 4px rgba(243, 156, 18, 0.1);
+}
+
+.bd-recommendations h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  color: #d35400;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bd-recommendations ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.bd-recommendations li {
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+
+.bd-recommendations li.highlight {
+  font-weight: bold;
+  color: #e74c3c;
+  background-color: #fff5f5;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  margin-left: -0.4rem;
+}
+
+.urgent-badge {
+  display: inline-block;
+  background-color: #e74c3c;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 12px;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+.bd-targets-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 400px;
+}
+
+.bd-targets-table th,
+.bd-targets-table td {
+  border: 1px solid #e0e0e0;
+  padding: 0.4rem;
+  text-align: center;
+}
+
+.bd-targets-table th {
+  background-color: #f1f8ed;
+  color: #2c5e11;
+  font-weight: bold;
+}
+
+.bd-period {
+  font-weight: bold;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.bd-period-name {
+  margin-bottom: 0.1rem;
+}
+
+.bd-target-rank {
+  font-size: 0.65rem;
+  color: #5da731;
+  font-weight: bold;
+  background-color: #f1f8ed;
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  display: inline-block;
+}
+
+.bd-target-cell {
+  position: relative;
+}
+
+.bd-target-input-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.bd-target-input {
+  width: 32px;
+  text-align: center;
+  padding: 0.2rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.bd-target-input:disabled {
+  background-color: transparent;
+  border-color: transparent;
+  color: #333;
+  font-weight: bold;
+  -webkit-text-fill-color: #333;
+  opacity: 1;
+}
+
+.bd-diff {
+  font-size: 0.75rem;
+  margin-top: 0.2rem;
+  font-weight: bold;
+}
+
+.bd-diff.achieved {
+  color: #2ecc71;
+  /* Green */
+}
+
+.bd-diff.shortfall {
+  color: #e74c3c;
+  /* Red */
+}
+
+.bd-effects-toggle {
+  margin-top: 0.5rem;
+}
+
+.bd-effects-btn {
+  width: 100%;
+  background-color: #e0f0d9;
+  color: #2c5e11;
+  border: 1px solid #c8e6c9;
+  padding: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.bd-effects-btn:hover {
+  background-color: #dcedc8;
+}
+
+.bd-effects-content {
+  background: white;
+  border: 1px solid #c8e6c9;
+  border-top: none;
+  padding: 1rem;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  font-size: 0.85rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.bd-effects-content h4 {
+  margin: 0 0 0.4rem 0;
+  color: #2c5e11;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.2rem;
+  font-size: 1rem;
+}
+
+.bd-effects-content ul {
+  margin: 0 0 1.2rem 0;
+  padding-left: 1.2rem;
+}
+
+.bd-effects-content li {
+  margin-bottom: 0.4rem;
+  line-height: 1.4;
+}
+
+.bd-effects-note {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0;
+  text-align: center;
+}
