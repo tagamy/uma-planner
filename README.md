@@ -15,7 +15,7 @@
 
 ---
 
-## � 使い方 (How to Use)
+## 使い方 (How to Use)
 
 本アプリのご利用方法は大きく分けて2通りあります。
 
@@ -39,7 +39,7 @@
 
 ---
 
-## �🚀 Getting Started
+## 🚀 Getting Started
 
 このアプリをローカル環境で動かすための手順です。本プロジェクトは React + TypeScript + Vite で構築された静的Webサイト（SPA）です。
 
