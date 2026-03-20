@@ -11,7 +11,7 @@
 ## 🌐 Sample Site
 
 実際に稼働しているサンプルサイト（デモ）はこちらからご利用いただけます。
-👉 **[https://uma.tagamy.com](https://uma.tagamy.com)**
+👉 **[https://tagamy.github.io/uma-planner/](https://tagamy.github.io/uma-planner/)**
 
 ---
 
