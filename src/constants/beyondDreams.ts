@@ -15,8 +15,17 @@ export const TARGET_TEAM_RANKS = [
     'CDD',
     'BBB',
     'SSS',
-    'UfUgUg'
+    'UgUgUg'
 ] as const;
+
+export const TARGET_TPS = [
+    '-',
+    '900',
+    '1900',
+    '3100',
+    '4500',
+    '6200'
+]
 
 export const STATUS_FOCUSED_TARGETS: BdTarget[] = [
     { physical: 3, technique: 1, mental: 1 },
@@ -28,21 +37,21 @@ export const STATUS_FOCUSED_TARGETS: BdTarget[] = [
 ];
 
 export const BALANCE_TARGETS: BdTarget[] = [
-    { physical: 3, technique: 1, mental: 1 },
+    { physical: 2, technique: 1, mental: 2 },
     { physical: 3, technique: 1, mental: 3 },
-    { physical: 4, technique: 2, mental: 5 },
-    { physical: 5, technique: 4, mental: 5 },
-    { physical: 5, technique: 4, mental: 8 },
+    { physical: 3, technique: 3, mental: 5 },
+    { physical: 4, technique: 5, mental: 5 },
+    { physical: 4, technique: 5, mental: 8 },
     { physical: 7, technique: 5, mental: 8 },
 ];
 
 export const SKILL_FOCUSED_TARGETS: BdTarget[] = [
-    { physical: 3, technique: 1, mental: 1 },
+    { physical: 1, technique: 1, mental: 3 },
     { physical: 3, technique: 1, mental: 3 },
-    { physical: 4, technique: 2, mental: 5 },
+    { physical: 3, technique: 3, mental: 5 },
     { physical: 4, technique: 5, mental: 5 },
     { physical: 4, technique: 5, mental: 8 },
-    { physical: 7, technique: 5, mental: 8 },
+    { physical: 5, technique: 7, mental: 8 },
 ];
 
 export const HIGH_SCORE_TARGETS: BdTarget[] = [

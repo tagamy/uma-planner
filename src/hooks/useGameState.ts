@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { GameState } from '../types';
-import { STATUS_FOCUSED_TARGETS, DEFAULT_CURRENT_LEVELS } from '../constants/beyondDreams';
+import { SKILL_FOCUSED_TARGETS, DEFAULT_CURRENT_LEVELS } from '../constants/beyondDreams';
 
 const STORAGE_KEY = 'uma-training-app-state';
 
@@ -27,8 +27,8 @@ export const defaultState: GameState = {
         { id: 'skill-2', name: 'レースの真髄・力', acquired: false },
     ],
     beyondDreams: {
-        preset: 'status',
-        targets: STATUS_FOCUSED_TARGETS,
+        preset: 'skill',
+        targets: SKILL_FOCUSED_TARGETS,
         currentLevels: DEFAULT_CURRENT_LEVELS,
     }
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { BdTarget, BdPresetType } from '../types';
-import { BD_PERIODS, STATUS_FOCUSED_TARGETS, SKILL_FOCUSED_TARGETS, HIGH_SCORE_TARGETS, MENTAL_MAX_TARGETS, BALANCE_TARGETS, SKILL_SCORE_MAX_TARGETS, TARGET_TEAM_RANKS } from '../constants/beyondDreams';
+import { BD_PERIODS, STATUS_FOCUSED_TARGETS, SKILL_FOCUSED_TARGETS, HIGH_SCORE_TARGETS, MENTAL_MAX_TARGETS, BALANCE_TARGETS, SKILL_SCORE_MAX_TARGETS, TARGET_TEAM_RANKS, TARGET_TPS } from '../constants/beyondDreams';
 
 interface BeyondDreamsSectionProps {
     preset: BdPresetType;
@@ -99,9 +99,9 @@ export const BeyondDreamsSection: React.FC<BeyondDreamsSectionProps> = ({
                 <div className="bd-preset-select">
                     <label>目標プリセット: </label>
                     <select value={preset} onChange={handlePresetChange}>
+                        <option value="skill">スキル重視</option>
                         <option value="status">ステータス重視</option>
                         <option value="balance">バランス重視</option>
-                        <option value="skill">スキル重視</option>
                         <option disabled>──────────</option>
                         <option value="high_score">上振れ狙い (8-5-8)</option>
                         <option value="mental_max">序盤の絆特化 (1-1-3)</option>
@@ -161,6 +161,9 @@ export const BeyondDreamsSection: React.FC<BeyondDreamsSectionProps> = ({
                                     <div className="bd-period-name">{period}</div>
                                     {TARGET_TEAM_RANKS[i] !== '-' && (
                                         <div className="bd-target-rank">目標: {TARGET_TEAM_RANKS[i]}</div>
+                                    )}
+                                    {TARGET_TPS[i] !== '-' && (
+                                        <div className="bd-target-tps">TP: {TARGET_TPS[i]}</div>
                                     )}
                                 </td>
                                 {(['physical', 'technique', 'mental'] as Array<keyof BdTarget>).map(field => {

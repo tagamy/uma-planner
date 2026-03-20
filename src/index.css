@@ -771,7 +771,21 @@ button:focus-visible {
   background-color: #f1f8ed;
   border-radius: 4px;
   padding: 0.1rem 0.3rem;
-  display: inline-block;
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.bd-target-tps {
+  font-size: 0.65rem;
+  color: #d35400;
+  font-weight: bold;
+  background-color: #fff9ed;
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  display: block;
+  width: fit-content;
+  margin: 0.2rem auto 0 auto;
 }
 
 .bd-target-cell {
