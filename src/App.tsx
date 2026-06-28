@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+
 import { useGameState } from './hooks/useGameState';
 import { SupportCardItem } from './components/SupportCardItem';
 import { FaGithub } from 'react-icons/fa';
@@ -144,7 +144,6 @@ function App() {
         {state.selectedScenario === 'torisenKen' ? (
           <TorisenKenSection
             state={state.torisenKen}
-            supportCards={state.supportCards}
             records={state.records}
             onChangeState={handleTorisenKenChange}
             onAddRecord={handleAddRecord}

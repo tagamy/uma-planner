@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import type { TorisenKenState, SupportCard, TrainingRecord } from '../types';
+import type { TorisenKenState, TrainingRecord } from '../types';
 import { REGIONS_DATA } from '../constants/torisenKenData';
 
 interface TorisenKenSectionProps {
     state: TorisenKenState;
-    supportCards: SupportCard[];
     records: TrainingRecord[];
     onChangeState: (updater: (prev: TorisenKenState) => TorisenKenState) => void;
     onAddRecord: (rank: string, score: string, sp: string) => void;
@@ -13,7 +12,6 @@ interface TorisenKenSectionProps {
 
 export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
     state,
-    supportCards,
     records,
     onChangeState,
     onAddRecord,
@@ -26,9 +24,7 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
 
 
 
-    const handleChange = <K extends keyof TorisenKenState>(key: K, value: TorisenKenState[K]) => {
-        onChangeState(prev => ({ ...prev, [key]: value }));
-    };
+
 
     const handleRegionChange = (period: 'junior' | 'classic' | 'senior', index: number, val: string) => {
         onChangeState(prev => {
