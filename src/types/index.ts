@@ -45,10 +45,49 @@ export interface BeyondDreamsState {
     currentLevels: BdTarget; // 現在のレベル
 }
 
+export interface TorisenKenState {
+    regions: {
+        junior: [string, string, string];
+        classic: [string, string, string];
+        senior: [string, string, string];
+    };
+    targetDistance: 'short' | 'mile' | 'medium' | 'long' | 'dirt' | '';
+    ramenCounts: {
+        junior: [number, number, number];
+        classic: [number, number, number];
+        senior: [number, number, number];
+    };
+    ultimateRamen: string; // 究極ラーメンの選択メモ
+}
+
+export interface TrainingRecord {
+    id: string;
+    rank: string;
+    score: string;
+    sp: string;
+    supportCards: string[];
+    torisenKen: {
+        regions: {
+            junior: [string, string, string];
+            classic: [string, string, string];
+            senior: [string, string, string];
+        };
+        ramenCounts: {
+            junior: [number, number, number];
+            classic: [number, number, number];
+            senior: [number, number, number];
+        };
+    };
+    createdAt: number;
+}
+
 export interface GameState {
     supportCards: SupportCard[];
     kiremono: KiremonoState;
     aptitudeS: AptitudeSState;
     inheritedSkills: InheritedSkill[];
     beyondDreams: BeyondDreamsState;
+    selectedScenario: 'beyondDreams' | 'torisenKen';
+    torisenKen: TorisenKenState;
+    records: TrainingRecord[];
 }

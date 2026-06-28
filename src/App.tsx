@@ -1,10 +1,12 @@
+import React, { useState } from 'react';
 import { useGameState } from './hooks/useGameState';
 import { SupportCardItem } from './components/SupportCardItem';
 import { FaGithub } from 'react-icons/fa';
 import { StatusToggle } from './components/StatusToggle';
 import { SkillList } from './components/SkillList';
 import { BeyondDreamsSection } from './components/BeyondDreamsSection';
-import type { BdPresetType, BdTarget } from './types';
+import { TorisenKenSection } from './components/TorisenKenSection';
+import type { BdPresetType, BdTarget, TrainingRecord } from './types';
 import './index.css';
 
 function App() {
@@ -66,6 +68,49 @@ function App() {
     });
   };
 
+  const handleScenarioChange = (scenario: 'beyondDreams' | 'torisenKen') => {
+    updateState(prev => ({
+      ...prev,
+      selectedScenario: scenario
+    }));
+  };
+
+  const handleTorisenKenChange = (updater: (prev: typeof state.torisenKen) => typeof state.torisenKen) => {
+    updateState(prev => ({
+      ...prev,
+      torisenKen: updater(prev.torisenKen)
+    }));
+  };
+
+  const handleAddRecord = (rank: string, score: string, sp: string) => {
+    if (!rank || !score || !sp) {
+      alert('ランク、評価点、獲得SPをすべて入力してください！');
+      return;
+    }
+    const newRecord: TrainingRecord = {
+      id: `record-${Date.now()}`,
+      rank,
+      score,
+      sp,
+      supportCards: state.supportCards.map(c => c.type),
+      torisenKen: {
+        regions: state.torisenKen.regions,
+        ramenCounts: state.torisenKen.ramenCounts
+      },
+      createdAt: Date.now()
+    };
+    updateState(prev => ({
+      ...prev,
+      records: [...prev.records, newRecord]
+    }));
+  };
+
+  const handleClearRecords = () => {
+    if(window.confirm('すべての記録を削除しますか？')) {
+      updateState(prev => ({ ...prev, records: [] }));
+    }
+  };
+
   const generateId = () => `skill-${Date.now()}`;
 
   return (
@@ -79,15 +124,42 @@ function App() {
       </header>
 
       <main className="app-main">
-        {/* Beyond Dreams セクション */}
-        <BeyondDreamsSection
-          preset={state.beyondDreams.preset}
-          targets={state.beyondDreams.targets}
-          currentLevels={state.beyondDreams.currentLevels}
-          onPresetChange={handleBdPresetChange}
-          onTargetsChange={handleBdTargetsChange}
-          onCurrentLevelChange={handleBdCurrentLevelChange}
-        />
+        {/* シナリオ切り替えタブ */}
+        <div className="scenario-tabs">
+          <button
+            className={`scenario-tab-btn ${state.selectedScenario === 'torisenKen' ? 'active' : ''}`}
+            onClick={() => handleScenarioChange('torisenKen')}
+          >
+            🍜 トレセン軒編
+          </button>
+          <button
+            className={`scenario-tab-btn ${state.selectedScenario === 'beyondDreams' ? 'active' : ''}`}
+            onClick={() => handleScenarioChange('beyondDreams')}
+          >
+            🌠 Beyond Dreams
+          </button>
+        </div>
+
+        {/* シナリオコンテンツ表示 */}
+        {state.selectedScenario === 'torisenKen' ? (
+          <TorisenKenSection
+            state={state.torisenKen}
+            supportCards={state.supportCards}
+            records={state.records}
+            onChangeState={handleTorisenKenChange}
+            onAddRecord={handleAddRecord}
+            onClearRecords={handleClearRecords}
+          />
+        ) : (
+          <BeyondDreamsSection
+            preset={state.beyondDreams.preset}
+            targets={state.beyondDreams.targets}
+            currentLevels={state.beyondDreams.currentLevels}
+            onPresetChange={handleBdPresetChange}
+            onTargetsChange={handleBdTargetsChange}
+            onCurrentLevelChange={handleBdCurrentLevelChange}
+          />
+        )}
 
         {/* サポートカードセクション */}
         <section className="section card-section">

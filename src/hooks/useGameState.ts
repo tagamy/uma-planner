@@ -30,7 +30,23 @@ export const defaultState: GameState = {
         preset: 'skill',
         targets: SKILL_FOCUSED_TARGETS,
         currentLevels: DEFAULT_CURRENT_LEVELS,
-    }
+    },
+    selectedScenario: 'torisenKen',
+    torisenKen: {
+        regions: {
+            junior: ['', '', ''],
+            classic: ['', '', ''],
+            senior: ['', '', '']
+        },
+        targetDistance: '',
+        ramenCounts: {
+            junior: [0, 0, 0],
+            classic: [0, 0, 0],
+            senior: [0, 0, 0]
+        },
+        ultimateRamen: '',
+    },
+    records: []
 };
 
 export const useGameState = () => {
@@ -57,6 +73,14 @@ export const useGameState = () => {
                     // カスタム追加されたスキルが消えないよう、IDベースでマージ
                     inheritedSkills: parsed.inheritedSkills || defaultState.inheritedSkills,
                     beyondDreams: parsed.beyondDreams || defaultState.beyondDreams,
+                    selectedScenario: parsed.selectedScenario ?? 'torisenKen',
+                    torisenKen: parsed.torisenKen ? { 
+                        ...defaultState.torisenKen, 
+                        ...parsed.torisenKen,
+                        regions: Array.isArray(parsed.torisenKen.regions) ? defaultState.torisenKen.regions : (parsed.torisenKen.regions || defaultState.torisenKen.regions),
+                        ramenCounts: parsed.torisenKen.ramenCounts?.junior ? parsed.torisenKen.ramenCounts : defaultState.torisenKen.ramenCounts
+                    } : defaultState.torisenKen,
+                    records: Array.isArray(parsed.records) ? parsed.records : defaultState.records,
                 };
             } catch (e) {
                 console.error('Failed to parse state from LocalStorage', e);
