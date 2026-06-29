@@ -18,6 +18,11 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
     onClearRecords
 }) => {
     const [showTips, setShowTips] = useState(false);
+    const [collapsedPeriods, setCollapsedPeriods] = useState<Record<'junior' | 'classic' | 'senior', boolean>>({
+        junior: false,
+        classic: false,
+        senior: false
+    });
     const [recordRank, setRecordRank] = useState('');
     const [recordScore, setRecordScore] = useState('');
     const [recordSp, setRecordSp] = useState('');
@@ -226,8 +231,17 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                         { id: 'senior' as const, label: 'シニア級 (1月前半)', tip: 'ステータス上限（スピード特化なら札幌など）に合わせて選ぼう！🌟', options: SENIOR_REGIONS }
                     ].map((item) => (
                         <div key={item.id} className="region-select-box" style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-                            <span className="region-label" style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>{item.label}</span>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <button 
+                                className="region-label" 
+                                onClick={() => setCollapsedPeriods(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                style={{ width: '100%', textAlign: 'left', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: collapsedPeriods[item.id] ? '0' : '0.5rem', padding: '0.5rem', background: '#f5f5f5', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                                <span>{item.label}</span>
+                                <span>{collapsedPeriods[item.id] ? '▼ 開く' : '▲ 閉じる'}</span>
+                            </button>
+                            {!collapsedPeriods[item.id] && (
+                                <>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
                                 {[0, 1, 2].map(index => {
                                     const selectedRegionVal = state.regions[item.id][index];
                                     const regionData = selectedRegionVal ? REGIONS_DATA[item.id][selectedRegionVal] : null;
@@ -282,6 +296,8 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                                 })}
                             </div>
                             <span className="region-tip" style={{ fontSize: '0.85rem', color: '#666' }}>{item.tip}</span>
+                                </>
+                            )}
                         </div>
                     ))}
                 </div>
