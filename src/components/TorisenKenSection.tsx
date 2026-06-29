@@ -23,8 +23,20 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
     const [recordSp, setRecordSp] = useState('');
 
 
+    const updateTips = (type: 'noodles' | 'soup' | 'toppings' | 'secret', delta: number) => {
+        onChangeState(prev => {
+            const current = prev.tips?.[type] || 0;
+            return {
+                ...prev,
+                tips: {
+                    ...prev.tips,
+                    [type]: Math.max(0, current + delta)
+                }
+            };
+        });
+    };
 
-
+    const totalTips = (state.tips?.noodles || 0) + (state.tips?.soup || 0) + (state.tips?.toppings || 0);
 
     const handleRegionChange = (period: 'junior' | 'classic' | 'senior', index: number, val: string) => {
         onChangeState(prev => {
@@ -156,6 +168,53 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                 </button>
             </div>
 
+            {/* コツ管理 */}
+            <div className="card" style={{ marginBottom: '1.5rem', padding: '1.5rem', backgroundColor: '#fff3e0', borderLeft: '4px solid #ff9800' }}>
+                <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>🍜 ラーメンのコツ所持数 (最大10)</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 'bold', color: totalTips > 10 ? 'red' : 'inherit' }}>
+                        合計: {totalTips} / 10
+                    </span>
+                </h3>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'space-around', marginTop: '1rem', flexWrap: 'nowrap', overflowX: 'auto' }}>
+                    {/* 麺 */}
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>麺</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <button onClick={() => updateTips('noodles', -1)} style={{ padding: '0.25rem 0.75rem', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0f0f0', color: '#333' }}>-</button>
+                            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', minWidth: '1.5rem' }}>{state.tips?.noodles || 0}</span>
+                            <button onClick={() => updateTips('noodles', 1)} style={{ padding: '0.25rem 0.75rem', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0f0f0', color: '#333' }}>+</button>
+                        </div>
+                    </div>
+                    {/* スープ */}
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>スープ</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <button onClick={() => updateTips('soup', -1)} style={{ padding: '0.25rem 0.75rem', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0f0f0', color: '#333' }}>-</button>
+                            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', minWidth: '1.5rem' }}>{state.tips?.soup || 0}</span>
+                            <button onClick={() => updateTips('soup', 1)} style={{ padding: '0.25rem 0.75rem', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0f0f0', color: '#333' }}>+</button>
+                        </div>
+                    </div>
+                    {/* トッピング */}
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>トッピング</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <button onClick={() => updateTips('toppings', -1)} style={{ padding: '0.25rem 0.75rem', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0f0f0', color: '#333' }}>-</button>
+                            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', minWidth: '1.5rem' }}>{state.tips?.toppings || 0}</span>
+                            <button onClick={() => updateTips('toppings', 1)} style={{ padding: '0.25rem 0.75rem', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0f0f0', color: '#333' }}>+</button>
+                        </div>
+                    </div>
+                    {/* 隠し味の秘訣 (Max 4) */}
+                    <div style={{ textAlign: 'center', borderLeft: '1px solid #ddd', paddingLeft: '1rem' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#e65100', whiteSpace: 'nowrap' }} title="隠し味の秘訣 (最大4)">隠し味</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <button onClick={() => updateTips('secret', -1)} style={{ padding: '0.25rem 0.75rem', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0f0f0', color: '#333' }}>-</button>
+                            <span style={{ fontSize: '1.2rem', fontWeight: 'bold', minWidth: '1.5rem', color: (state.tips?.secret || 0) > 4 ? 'red' : 'inherit' }}>{state.tips?.secret || 0}</span>
+                            <button onClick={() => updateTips('secret', 1)} style={{ padding: '0.25rem 0.75rem', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0f0f0', color: '#333' }}>+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div className="card region-recommend-card">
                 <h3>1. ご当地ラーメン研究 (地域選択)</h3>
@@ -272,7 +331,7 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                     <textarea 
                         readOnly 
                         value={generateTsv()} 
-                        style={{ width: '100%', height: '150px', padding: '0.5rem', fontFamily: 'monospace', fontSize: '0.85rem', whiteSpace: 'pre', overflow: 'auto', borderRadius: '4px', border: '1px solid #ccc' }}
+                        style={{ width: '100%', height: '150px', padding: '0.5rem', boxSizing: 'border-box', fontFamily: 'monospace', fontSize: '0.85rem', whiteSpace: 'pre', overflow: 'auto', borderRadius: '4px', border: '1px solid #ccc' }}
                         placeholder="記録を追加するとここにタブ区切りのデータが表示されます。全選択してコピー＆ペーストしてください。"
                     />
                 </div>

@@ -33,6 +33,7 @@ export const defaultState: GameState = {
     },
     selectedScenario: 'torisenKen',
     torisenKen: {
+        tips: { noodles: 0, soup: 0, toppings: 0, secret: 0 },
         regions: {
             junior: ['', '', ''],
             classic: ['', '', ''],
@@ -77,6 +78,7 @@ export const useGameState = () => {
                     torisenKen: parsed.torisenKen ? { 
                         ...defaultState.torisenKen, 
                         ...parsed.torisenKen,
+                        tips: parsed.torisenKen.tips || defaultState.torisenKen.tips,
                         regions: Array.isArray(parsed.torisenKen.regions) ? defaultState.torisenKen.regions : (parsed.torisenKen.regions || defaultState.torisenKen.regions),
                         ramenCounts: parsed.torisenKen.ramenCounts?.junior ? parsed.torisenKen.ramenCounts : defaultState.torisenKen.ramenCounts
                     } : defaultState.torisenKen,

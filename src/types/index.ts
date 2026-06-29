@@ -46,6 +46,12 @@ export interface BeyondDreamsState {
 }
 
 export interface TorisenKenState {
+    tips: {
+        noodles: number;
+        soup: number;
+        toppings: number;
+        secret: number;
+    };
     regions: {
         junior: [string, string, string];
         classic: [string, string, string];
