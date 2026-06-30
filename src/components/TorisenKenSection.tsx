@@ -6,7 +6,7 @@ interface TorisenKenSectionProps {
     state: TorisenKenState;
     records: TrainingRecord[];
     onChangeState: (updater: (prev: TorisenKenState) => TorisenKenState) => void;
-    onAddRecord: (rank: string, score: string, sp: string) => void;
+    onAddRecord: (rank: string, score: string, sp: string, juniorSp: string, classicSp: string) => void;
     onClearRecords: () => void;
 }
 
@@ -26,6 +26,8 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
     const [recordRank, setRecordRank] = useState('');
     const [recordScore, setRecordScore] = useState('');
     const [recordSp, setRecordSp] = useState('');
+    const [recordJuniorSp, setRecordJuniorSp] = useState('');
+    const [recordClassicSp, setRecordClassicSp] = useState('');
 
 
     const updateTips = (type: 'noodles' | 'soup' | 'toppings' | 'secret', delta: number) => {
@@ -106,6 +108,29 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
         });
     };
 
+    const handleApplyPreset = (presetType: 'stable' | 'max') => {
+        if (!window.confirm('現在の地域選択とラーメン作成数がリセットされます。適用しますか？')) {
+            return;
+        }
+        onChangeState(prev => {
+            return {
+                ...prev,
+                regions: {
+                    ...prev.regions,
+                    junior: ['札幌', '函館', '東京'],
+                    classic: ['中山', '阪神', '小倉'],
+                    senior: presetType === 'stable' ? ['中山', '京都', '阪神'] : ['札幌', '函館', '京都']
+                },
+                ramenCounts: {
+                    ...prev.ramenCounts,
+                    junior: [0, 0, 0],
+                    classic: [0, 0, 0],
+                    senior: [0, 0, 0]
+                }
+            };
+        });
+    };
+
     const handleShare = () => {
         const text = `ウマ娘の新シナリオ「トレセン軒編」で育成中！🍜🔥\n究極ラーメンを目指すよっ！\n\n`;
         const url = 'https://uma.tagamy.com/';
@@ -115,10 +140,12 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
     };
 
     const handleAddRecordClick = () => {
-        onAddRecord(recordRank, recordScore, recordSp);
+        onAddRecord(recordRank, recordScore, recordSp, recordJuniorSp, recordClassicSp);
         setRecordRank('');
         setRecordScore('');
         setRecordSp('');
+        setRecordJuniorSp('');
+        setRecordClassicSp('');
     };
 
     const generateTsv = () => {
@@ -128,6 +155,8 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                 record.rank,
                 record.score,
                 record.sp,
+                record.juniorSp || '',
+                record.classicSp || '',
                 record.supportCards.join('/'),
             ];
             // Junior
@@ -223,6 +252,42 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
 
             <div className="card region-recommend-card">
                 <h3>1. ご当地ラーメン研究 (地域選択)</h3>
+                
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f0f8ff', borderRadius: '8px', border: '1px solid #bbdefb' }}>
+                    <h4 style={{ margin: '0 0 0.75rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1976d2' }}>
+                        <span>💡 おすすめプリセット (235の法則)</span>
+                    </h4>
+                    <p style={{ fontSize: '0.85rem', color: '#555', marginBottom: '0.75rem', marginTop: 0 }}>
+                        スピ・スタ・賢さ編成向けの、地域とゲージ獲得が最適化されたセットを一括適用します。
+                    </p>
+                    <details style={{ marginBottom: '1rem', fontSize: '0.85rem', color: '#444' }}>
+                        <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: '#1976d2' }}>235の法則とは？（クリックで解説を開く）</summary>
+                        <div style={{ padding: '0.75rem', marginTop: '0.5rem', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #e3f2fd' }}>
+                            <p style={{ margin: '0 0 0.5rem 0' }}>
+                                地域の選択によって素材（麺・スープ・トッピング）の獲得ゲージのベースを「2:3:5」などにあえて偏らせるテクニックです。<br/>
+                                回収ベースを「5」にしておくと、友情練習を踏んだ際に一発でその素材のコツを回収できるようになり、試食のサイクルが格段に早くなります。
+                            </p>
+                            <ul style={{ margin: '0', paddingLeft: '1.2rem' }}>
+                                <li style={{ marginBottom: '0.25rem' }}><strong>安定型</strong>: どの練習でも何かしらのラーメンが食べられ、圧倒的な安定感があります。</li>
+                                <li><strong>最高値狙い</strong>: よりステータス上限（サブステなど）を伸ばしたい場合の単種ブースト特化です。</li>
+                            </ul>
+                        </div>
+                    </details>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <button 
+                            onClick={() => handleApplyPreset('stable')}
+                            style={{ padding: '0.5rem 1rem', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                        >
+                            <span>🔰 安定型 (3種複合)</span>
+                        </button>
+                        <button 
+                            onClick={() => handleApplyPreset('max')}
+                            style={{ padding: '0.5rem 1rem', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                        >
+                            <span>🔥 最高値狙い (単種ブースト)</span>
+                        </button>
+                    </div>
+                </div>
 
                 <div className="regions-grid" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {[
@@ -318,6 +383,14 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                         <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>獲得SP</label>
                         <input type="number" value={recordSp} onChange={e => setRecordSp(e.target.value)} placeholder="例: 4500" style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>ジュニア終了時SP</label>
+                        <input type="number" value={recordJuniorSp} onChange={e => setRecordJuniorSp(e.target.value)} placeholder="例: 1000" style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', width: '130px' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>クラシック終了時SP</label>
+                        <input type="number" value={recordClassicSp} onChange={e => setRecordClassicSp(e.target.value)} placeholder="例: 2500" style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', width: '130px' }} />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                         <button onClick={handleAddRecordClick} style={{ padding: '0.5rem 1.5rem', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>

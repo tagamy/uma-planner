@@ -71,6 +71,8 @@ export interface TrainingRecord {
     rank: string;
     score: string;
     sp: string;
+    juniorSp?: string;
+    classicSp?: string;
     supportCards: string[];
     torisenKen: {
         regions: {

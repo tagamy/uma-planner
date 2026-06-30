@@ -82,9 +82,9 @@ function App() {
     }));
   };
 
-  const handleAddRecord = (rank: string, score: string, sp: string) => {
+  const handleAddRecord = (rank: string, score: string, sp: string, juniorSp: string, classicSp: string) => {
     if (!rank || !score || !sp) {
-      alert('ランク、評価点、獲得SPをすべて入力してください！');
+      alert('ランク、評価点、獲得SPを入力してください！');
       return;
     }
     const newRecord: TrainingRecord = {
@@ -92,6 +92,8 @@ function App() {
       rank,
       score,
       sp,
+      juniorSp,
+      classicSp,
       supportCards: state.supportCards.map(c => c.type),
       torisenKen: {
         regions: state.torisenKen.regions,
