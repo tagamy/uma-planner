@@ -108,18 +108,36 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
         });
     };
 
-    const handleApplyPreset = (presetType: 'stable' | 'max') => {
+    const handleApplyPreset = (presetType: 'stable' | 'max' | 'strict') => {
         if (!window.confirm('現在の地域選択とラーメン作成数がリセットされます。適用しますか？')) {
             return;
         }
         onChangeState(prev => {
+            let junior: [string, string, string] = ['札幌', '函館', '東京'];
+            let classic: [string, string, string] = ['中山', '阪神', '小倉'];
+            let senior: [string, string, string] = ['中山', '京都', '阪神'];
+
+            if (presetType === 'stable') {
+                junior = ['札幌', '函館', '東京'];
+                classic = ['中山', '阪神', '小倉'];
+                senior = ['中山', '京都', '阪神'];
+            } else if (presetType === 'max') {
+                junior = ['札幌', '函館', '東京'];
+                classic = ['中山', '阪神', '小倉'];
+                senior = ['札幌', '函館', '京都'];
+            } else if (presetType === 'strict') {
+                junior = ['札幌', '函館', '福島'];
+                classic = ['小倉', '京都', '阪神'];
+                senior = ['札幌', '函館', '京都'];
+            }
+
             return {
                 ...prev,
                 regions: {
                     ...prev.regions,
-                    junior: ['札幌', '函館', '東京'],
-                    classic: ['中山', '阪神', '小倉'],
-                    senior: presetType === 'stable' ? ['中山', '京都', '阪神'] : ['札幌', '函館', '京都']
+                    junior,
+                    classic,
+                    senior
                 },
                 ramenCounts: {
                     ...prev.ramenCounts,
@@ -268,8 +286,9 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                                 回収ベースを「5」にしておくと、友情練習を踏んだ際に一発でその素材のコツを回収できるようになり、試食のサイクルが格段に早くなります。
                             </p>
                             <ul style={{ margin: '0', paddingLeft: '1.2rem' }}>
-                                <li style={{ marginBottom: '0.25rem' }}><strong>安定型</strong>: どの練習でも何かしらのラーメンが食べられ、圧倒的な安定感があります。</li>
-                                <li><strong>最高値狙い</strong>: よりステータス上限（サブステなど）を伸ばしたい場合の単種ブースト特化です。</li>
+                                <li style={{ marginBottom: '0.25rem' }}><strong>安定型</strong>: どの練習でもラーメンが食べられ、圧倒的な安定感があります。（下振れ回避）</li>
+                                <li style={{ marginBottom: '0.25rem' }}><strong>最高値狙い</strong>: 安定型からシニア期だけ単種ブースト特化に変えたルートです。</li>
+                                <li><strong>2-3-5完全特化</strong>: ジュニア・クラシックから完全に2:3:5比率を作る上振れ狙いルートです。（ジュニア福島、クラシック小倉・京都・阪神）</li>
                             </ul>
                         </div>
                     </details>
@@ -278,13 +297,19 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                             onClick={() => handleApplyPreset('stable')}
                             style={{ padding: '0.5rem 1rem', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
                         >
-                            <span>🔰 安定型 (3種複合)</span>
+                            <span>🔰 安定型 (下振れ回避)</span>
                         </button>
                         <button 
                             onClick={() => handleApplyPreset('max')}
                             style={{ padding: '0.5rem 1rem', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
                         >
                             <span>🔥 最高値狙い (単種ブースト)</span>
+                        </button>
+                        <button 
+                            onClick={() => handleApplyPreset('strict')}
+                            style={{ padding: '0.5rem 1rem', backgroundColor: '#9c27b0', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                        >
+                            <span>🎯 2-3-5完全特化 (上振れ狙い)</span>
                         </button>
                     </div>
                 </div>
