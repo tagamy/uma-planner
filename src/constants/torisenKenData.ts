@@ -72,7 +72,7 @@ export const REGIONS_DATA: Record<'junior' | 'classic' | 'senior', Record<string
         },
         '新潟': {
             name: '新潟',
-            cost: { noodles: 1, soup: 2, toppings: 2 },
+            cost: { noodles: 3, soup: 1, toppings: 1 },
             effects: ['パワーの友情ボーナス60％', 'パワートレーニングでスキルPtのトレーニング効果アップ50％', '編成サポートカードタイプ4種以上なら編成サポートカードから追加で1人パワートレーニングに現れる']
         },
         '福島': {
@@ -92,7 +92,7 @@ export const REGIONS_DATA: Record<'junior' | 'classic' | 'senior', Record<string
         },
         '中京': {
             name: '中京',
-            cost: { noodles: 2, soup: 0, toppings: 3 },
+            cost: { noodles: 3, soup: 2, toppings: 0 },
             effects: ['スピード，パワー，根性の友情ボーナス40％', 'スピード，パワー，根性トレーニングのスキルPtのトレーニング効果アップ50％', '編成サポートカードタイプが4種以上なら編成サポートカードから追加で1人ずつスピード，パワー，根性トレーニングに現れる']
         },
         '京都': {
