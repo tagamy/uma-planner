@@ -385,6 +385,88 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                                     );
                                 })}
                             </div>
+
+                            {(() => {
+                                let sumNoodles = 0;
+                                let sumSoup = 0;
+                                let sumToppings = 0;
+                                state.regions[item.id].forEach(regionName => {
+                                    if (regionName) {
+                                        const data = REGIONS_DATA[item.id][regionName];
+                                        if (data) {
+                                            sumNoodles += data.cost.noodles;
+                                            sumSoup += data.cost.soup;
+                                            sumToppings += data.cost.toppings;
+                                        }
+                                    }
+                                });
+                                
+                                const calcGauge = (n: number, s: number, t: number) => {
+                                    let gn = Math.round(n * 2 / 3);
+                                    let gs = Math.round(s * 2 / 3);
+                                    let gt = Math.round(t * 2 / 3);
+                                    
+                                    const sum = gn + gs + gt;
+                                    
+                                    if (sum === 11) {
+                                        const cands = [];
+                                        if ((n * 2) % 3 === 2) cands.push({id: 'n', cost: n, order: 0});
+                                        if ((s * 2) % 3 === 2) cands.push({id: 's', cost: s, order: 1});
+                                        if ((t * 2) % 3 === 2) cands.push({id: 't', cost: t, order: 2});
+                                        
+                                        cands.sort((a, b) => {
+                                            if (a.cost !== b.cost) return a.cost - b.cost;
+                                            return a.order - b.order;
+                                        });
+                                        
+                                        if (cands.length > 0) {
+                                            if (cands[0].id === 'n') gn--;
+                                            else if (cands[0].id === 's') gs--;
+                                            else if (cands[0].id === 't') gt--;
+                                        }
+                                    } else if (sum === 9) {
+                                        const cands = [];
+                                        if ((n * 2) % 3 === 1) cands.push({id: 'n', cost: n, order: 2});
+                                        if ((s * 2) % 3 === 1) cands.push({id: 's', cost: s, order: 1});
+                                        if ((t * 2) % 3 === 1) cands.push({id: 't', cost: t, order: 0});
+                                        
+                                        cands.sort((a, b) => {
+                                            if (a.cost !== b.cost) return a.cost - b.cost;
+                                            return a.order - b.order;
+                                        });
+                                        
+                                        if (cands.length > 0) {
+                                            if (cands[0].id === 'n') gn++;
+                                            else if (cands[0].id === 's') gs++;
+                                            else if (cands[0].id === 't') gt++;
+                                        }
+                                    }
+                                    return { gn, gs, gt };
+                                };
+                                
+                                const gauges = calcGauge(sumNoodles, sumSoup, sumToppings);
+
+                                return (
+                                    <div style={{ padding: '0.75rem', backgroundColor: '#e8f5e9', borderRadius: '4px', border: '1px solid #a5d6a7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                        <span style={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '0.9rem' }}>🍜 ゲージ獲得量 (計算値)</span>
+                                        <div style={{ display: 'flex', gap: '0.75rem', fontWeight: 'bold', color: '#1b5e20', fontSize: '0.95rem' }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <span style={{ fontSize: '0.8rem', color: '#666' }}>麺</span>
+                                                <span>{gauges.gn > 0 ? `+${gauges.gn}` : '0'}</span>
+                                            </span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <span style={{ fontSize: '0.8rem', color: '#666' }}>スープ</span>
+                                                <span>{gauges.gs > 0 ? `+${gauges.gs}` : '0'}</span>
+                                            </span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <span style={{ fontSize: '0.8rem', color: '#666' }}>トピ</span>
+                                                <span>{gauges.gt > 0 ? `+${gauges.gt}` : '0'}</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             <span className="region-tip" style={{ fontSize: '0.85rem', color: '#666' }}>{item.tip}</span>
                                 </>
                             )}
