@@ -108,7 +108,7 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
         });
     };
 
-    const handleApplyPreset = (presetType: 'stable' | 'max' | 'strict') => {
+    const handleApplyPreset = (presetType: 'stable' | 'max' | 'strict' | 'strict_int' | 'strict_bal') => {
         if (!window.confirm('現在の地域選択とラーメン作成数がリセットされます。適用しますか？')) {
             return;
         }
@@ -129,6 +129,14 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                 junior = ['札幌', '函館', '福島'];
                 classic = ['小倉', '京都', '阪神'];
                 senior = ['札幌', '函館', '京都'];
+            } else if (presetType === 'strict_int') {
+                junior = ['札幌', '函館', '福島'];
+                classic = ['小倉', '京都', '阪神'];
+                senior = ['函館', '東京', '阪神'];
+            } else if (presetType === 'strict_bal') {
+                junior = ['札幌', '函館', '福島'];
+                classic = ['小倉', '京都', '阪神'];
+                senior = ['函館', '中山', '京都'];
             }
 
             return {
@@ -310,6 +318,18 @@ export const TorisenKenSection: React.FC<TorisenKenSectionProps> = ({
                             style={{ padding: '0.5rem 1rem', backgroundColor: '#9c27b0', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
                         >
                             <span>🎯 2-3-5完全特化 (上振れ狙い)</span>
+                        </button>
+                        <button 
+                            onClick={() => handleApplyPreset('strict_int')}
+                            style={{ padding: '0.5rem 1rem', backgroundColor: '#673ab7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                        >
+                            <span>🧠 2-3-5完全特化 (賢さ重視)</span>
+                        </button>
+                        <button 
+                            onClick={() => handleApplyPreset('strict_bal')}
+                            style={{ padding: '0.5rem 1rem', backgroundColor: '#e91e63', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                        >
+                            <span>⚖️ 2-3-5完全特化 (具材バランス)</span>
                         </button>
                     </div>
                 </div>
