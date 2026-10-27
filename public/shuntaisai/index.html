@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ウマ娘 新育成シナリオ「朋、史解き ―午式駿大祭―」徹底攻略インフォグラフィック（教え＆転成 完全データベース版）</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-4 md:p-8 font-sans">
+  <div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header Section -->
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white p-6 md:p-8 shadow-lg">
+      <div class="relative z-10 space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+            <span>⛩️ 駿大祭編・完全データベース統合版</span>
+          </span>
+          <span class="inline-flex items-center gap-1.5 bg-amber-400 text-black px-3 py-1 rounded-full text-xs font-black shadow-sm">
+            <span>🔥 最高峰「LGランク」育成対応！</span>
+          </span>
+        </div>
+        <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight">
+          朋、史解き <span class="text-amber-200">―午式駿大祭―</span>
+        </h1>
+        <p class="text-rose-100 text-sm md:text-base max-w-2xl">
+          12年に一度の大祭で新時代到来！「教え＆転成」のLv1〜10全効果一覧からサポカ5種類ルール、黄金デッキテンプレまで完全網羅。
+        </p>
+
+        <!-- Status Caps Badges -->
+        <div class="pt-2">
+          <p class="text-xs text-rose-200 font-medium mb-1.5">⚡ 解放ステータス上限</p>
+          <div class="grid grid-cols-5 gap-2 text-center text-xs md:text-sm font-bold">
+            <div class="bg-black/25 backdrop-blur-sm rounded-lg p-2 border border-white/10">
+              <div class="text-rose-200 text-xs">スピード</div>
+              <div class="text-white text-base md:text-lg">2,200</div>
+            </div>
+            <div class="bg-black/25 backdrop-blur-sm rounded-lg p-2 border border-white/10">
+              <div class="text-amber-200 text-xs">スタミナ</div>
+              <div class="text-white text-base md:text-lg">1,850</div>
+            </div>
+            <div class="bg-black/25 backdrop-blur-sm rounded-lg p-2 border border-white/10">
+              <div class="text-orange-200 text-xs">パワー</div>
+              <div class="text-white text-base md:text-lg">1,800</div>
+            </div>
+            <div class="bg-black/25 backdrop-blur-sm rounded-lg p-2 border border-white/10">
+              <div class="text-pink-200 text-xs">根性</div>
+              <div class="text-white text-base md:text-lg">1,700</div>
+            </div>
+            <div class="bg-black/25 backdrop-blur-sm rounded-lg p-2 border border-white/10">
+              <div class="text-blue-200 text-xs">賢さ</div>
+              <div class="text-white text-base md:text-lg">1,800</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRITICAL RULE ALERT BOX -->
+    <div class="bg-rose-500/10 border-2 border-rose-500/40 rounded-xl p-4 md:p-5 shadow-sm space-y-2">
+      <div class="flex items-center gap-2 text-rose-500 font-black text-sm md:text-base">
+        <span class="text-xl">⚠️</span>
+        <span>【編成の絶対ルール】サポートカードは「5種類以上のタイプ」が必須！</span>
+      </div>
+      <p class="text-xs md:text-sm text-[var(--foreground)] leading-relaxed">
+        デッキ内のサポカタイプが5種類未満だと、シナリオ固有の超強力ボーナスである<strong class="text-rose-500 font-bold">「スキルPtトレーニング効果」および「獲得上限アップ」が発動しません</strong>！<br class="hidden sm:inline">
+        （例：スピ3＋賢さ2＋友人などの偏った編成はNG❌。必ず5種類以上のタイプを散らしましょう！）
+      </p>
+    </div>
+
+    <!-- NEW SECTION: 教え＆転成 完全早見データバンク -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 md:p-6 shadow-sm space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border)] pb-4">
+        <div>
+          <span class="text-xs font-bold text-amber-500 uppercase tracking-wider">DATABASE</span>
+          <h2 class="text-xl font-extrabold text-[var(--foreground)] flex items-center gap-2">
+            <span>📜</span> 「教え」と「教え転成」完全早見データバンク
+          </h2>
+        </div>
+        <!-- Tab Controls -->
+        <div class="inline-flex p-1 bg-[var(--background)] border border-[var(--border)] rounded-xl text-xs font-bold">
+          <button id="tab-btn-1" onclick="switchOshieTab(1)" class="px-3 py-1.5 rounded-lg bg-amber-500 text-white transition-all shadow-sm">
+            ① ジュニア期 (基本5種)
+          </button>
+          <button id="tab-btn-2" onclick="switchOshieTab(2)" class="px-3 py-1.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all">
+            ② クラシック期 (特化・研鑽)
+          </button>
+          <button id="tab-btn-3" onclick="switchOshieTab(3)" class="px-3 py-1.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all">
+            ③ シニア期 (協力・不屈・両道)
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content 1: ジュニア期（基本5種と転成効果） -->
+      <div id="tab-content-1" class="space-y-4">
+        <div class="bg-[var(--background)] p-3.5 rounded-xl border border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+          <strong class="text-[var(--foreground)]">💡 ポイント：</strong> ジュニア期に授かる基本の5つの教えは、転成後も<strong class="text-amber-500 font-bold">「転成効果」として育成終了まで永続</strong>します！
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="bg-[var(--background)] border-b border-[var(--border)] text-[var(--foreground)]">
+                <th class="p-3 font-bold rounded-l-lg">教えの名前</th>
+                <th class="p-3 font-bold">主な基本効果</th>
+                <th class="p-3 font-bold rounded-r-lg text-amber-500">転成時に引き継がれる永続「転成効果」</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border)]">
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-3 font-bold text-red-500 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-red-500"></span> 絆の教え
+                </td>
+                <td class="p-3 text-[var(--foreground)]">絆ゲージ上昇量UP / 演目稽古のメイン能力UP</td>
+                <td class="p-3 font-bold text-amber-500">夏合宿中に担当サポカが追加で＋1人出現！</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-3 font-bold text-blue-500 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-blue-500"></span> 得意率の教え
+                </td>
+                <td class="p-3 text-[var(--foreground)]">得意練習に出現しやすくなる</td>
+                <td class="p-3 font-bold text-amber-500">演目稽古に友情ボーナスが乗る！</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-3 font-bold text-emerald-500 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span> ヒントの教え
+                </td>
+                <td class="p-3 text-[var(--foreground)]">ヒント（！）の発生率UP</td>
+                <td class="p-3 font-bold text-amber-500">演目稽古時のヒント獲得数＋1！</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-3 font-bold text-pink-500 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-pink-500"></span> 助力の教え
+                </td>
+                <td class="p-3 text-[var(--foreground)]">友情非発生時のトレ効果UP</td>
+                <td class="p-3 font-bold text-amber-500">演目稽古で「助力の支え（トレ効果UP）」獲得！</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-3 font-bold text-purple-500 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-purple-500"></span> 体力の教え
+                </td>
+                <td class="p-3 text-[var(--foreground)]">演目稽古の体力消費量ダウン</td>
+                <td class="p-3 font-bold text-amber-500">演目稽古の体力消費ダウンがずっと継続！</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab Content 2: クラシック期（特化・研鑽） -->
+      <div id="tab-content-2" class="space-y-4 hidden">
+        <div class="bg-[var(--background)] p-3.5 rounded-xl border border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+          <strong class="text-[var(--foreground)]">💡 クラシック級1月前半（第1回発表会後）：</strong> メインステータスを突き抜けて伸ばす「特化」と、追加稽古の発生率を激増させる「研鑽」が登場！
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 特化の教え -->
+          <div class="bg-[var(--background)] p-4 rounded-xl border border-[var(--border)] space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded">主ステータス最優先</span>
+              <span class="text-xs text-[var(--muted-foreground)]">上限突破型</span>
+            </div>
+            <h3 class="font-bold text-base text-[var(--foreground)]">特化の教え</h3>
+            <p class="text-xs text-[var(--muted-foreground)]">メイン基礎能力の獲得量UP ＆ 基礎能力の獲得上限UP！</p>
+            
+            <div class="overflow-x-auto pt-2">
+              <table class="w-full text-center text-xs">
+                <thead>
+                  <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
+                    <th class="py-1">Lv</th><th>Lv1</th><th>Lv3</th><th>Lv5</th><th>Lv7</th><th>Lv9</th><th class="text-red-500">Lv10</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border)] text-[var(--foreground)]">
+                  <tr>
+                    <td class="py-1.5 font-bold text-[var(--muted-foreground)]">能力UP</td>
+                    <td>+5%</td><td>+7%</td><td>+9%</td><td>+13%</td><td>+20%</td><td class="font-bold text-red-500">+25%</td>
+                  </tr>
+                  <tr>
+                    <td class="py-1.5 font-bold text-[var(--muted-foreground)]">上限UP</td>
+                    <td>+5</td><td>+7</td><td>+9</td><td>+13</td><td>+20</td><td class="font-bold text-red-500">+25</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 研鑽の教え -->
+          <div class="bg-[var(--background)] p-4 rounded-xl border border-[var(--border)] space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">イベント連発</span>
+              <span class="text-xs text-[var(--muted-foreground)]">手数ブースト型</span>
+            </div>
+            <h3 class="font-bold text-base text-[var(--foreground)]">研鑽の教え</h3>
+            <p class="text-xs text-[var(--muted-foreground)]">演目担当がいる練習でイベント「追加の稽古」発生率が大幅UP！</p>
+
+            <div class="overflow-x-auto pt-2">
+              <table class="w-full text-center text-xs">
+                <thead>
+                  <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
+                    <th class="py-1">Lv</th><th>Lv1</th><th>Lv3</th><th>Lv5</th><th>Lv7</th><th>Lv9</th><th class="text-amber-500">Lv10</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border)] text-[var(--foreground)]">
+                  <tr>
+                    <td class="py-1.5 font-bold text-[var(--muted-foreground)]">発生率</td>
+                    <td>+20%</td><td>+24%</td><td>+30%</td><td>+40%</td><td>+65%</td><td class="font-bold text-amber-500">+80%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 3: シニア期（協力・不屈・両道） -->
+      <div id="tab-content-3" class="space-y-4 hidden">
+        <div class="bg-[var(--background)] p-3.5 rounded-xl border border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+          <strong class="text-[var(--foreground)]">💡 シニア級1月前半（第2回発表会後）：</strong> シナリオ終盤を極める究極の3つの教え！特に<strong class="text-emerald-500 font-bold">「不屈の教え Lv10（体力0でも失敗率0%）」</strong>は超強力！
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-center border-collapse">
+            <thead>
+              <tr class="bg-[var(--background)] border-b border-[var(--border)] text-[var(--foreground)]">
+                <th class="p-2.5 font-bold">演目Lv</th>
+                <th class="p-2.5 font-bold text-blue-500">協力の教え<br><span class="text-[10px] text-[var(--muted-foreground)]">友情ボーナス</span></th>
+                <th class="p-2.5 font-bold text-emerald-500">不屈の教え<br><span class="text-[10px] text-[var(--muted-foreground)]">失敗率0%条件 / トレ効果</span></th>
+                <th class="p-2.5 font-bold text-orange-500">両道の教え<br><span class="text-[10px] text-[var(--muted-foreground)]">サブ能力UP / 演目トレ効果</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border)]">
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-2 font-bold text-[var(--muted-foreground)]">Lv.1</td>
+                <td class="p-2">+1%</td>
+                <td class="p-2">体力 45以上</td>
+                <td class="p-2">+1% ／ +1%</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-2 font-bold text-[var(--muted-foreground)]">Lv.3</td>
+                <td class="p-2">+3%</td>
+                <td class="p-2">体力 35以上</td>
+                <td class="p-2">+3% ／ +3%</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-2 font-bold text-[var(--muted-foreground)]">Lv.5</td>
+                <td class="p-2">+5%</td>
+                <td class="p-2">体力 25以上</td>
+                <td class="p-2">+5% ／ +5%</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-2 font-bold text-[var(--muted-foreground)]">Lv.7</td>
+                <td class="p-2">+7%</td>
+                <td class="p-2">体力 15以上</td>
+                <td class="p-2">+11% ／ +9%</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-2 font-bold text-[var(--muted-foreground)]">Lv.8</td>
+                <td class="p-2">+8%</td>
+                <td class="p-2">体力 10以上 <span class="text-emerald-500 font-bold">(+1%)</span></td>
+                <td class="p-2">+15% ／ +11%</td>
+              </tr>
+              <tr class="hover:bg-[var(--background)]/50">
+                <td class="p-2 font-bold text-[var(--muted-foreground)]">Lv.9</td>
+                <td class="p-2">+9%</td>
+                <td class="p-2">体力 5以上 <span class="text-emerald-500 font-bold">(+3%)</span></td>
+                <td class="p-2">+20% ／ +13%</td>
+              </tr>
+              <tr class="bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-orange-500/10 font-black">
+                <td class="p-2.5 text-amber-500 font-extrabold text-sm">Lv.10 (MAX)</td>
+                <td class="p-2.5 text-blue-500 text-sm">+10%</td>
+                <td class="p-2.5 text-emerald-500 text-sm">【条件なし】体力0でも失敗0%！ (+5%)</td>
+                <td class="p-2.5 text-orange-500 text-sm">+25% ／ +15%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Hidden Unique Bonus -->
+        <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-xs text-[var(--foreground)] flex items-center gap-2">
+          <span class="text-base">👥</span>
+          <span><strong>【協力の教え】固有ボーナス：</strong> 全Lv共通で「担当サポカがランダムで別のトレーニングに＋1人ワープ出現」！実質人数が増加して練習効果爆上がり！</span>
+        </div>
+      </div>
+
+      <!-- Recommended Transfer Route Advice -->
+      <div class="bg-[var(--background)] rounded-xl p-4 border border-[var(--border)] text-xs space-y-2">
+        <div class="font-bold text-[var(--foreground)] flex items-center gap-1.5">
+          <span>🎯</span> おすすめの転成ビルドルート
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div class="p-2.5 bg-[var(--card)] rounded-lg border border-[var(--border)]">
+            <div class="font-bold text-red-500">主ステ（スピード等）</div>
+            <div class="text-[var(--muted-foreground)] text-[11px] mt-0.5">クラシック：<strong>特化</strong> ➡️ シニア：<strong>両道</strong>でステ上限＆トレ効果を極大化！</div>
+          </div>
+          <div class="p-2.5 bg-[var(--card)] rounded-lg border border-[var(--border)]">
+            <div class="font-bold text-blue-500">サポカ密集枠</div>
+            <div class="text-[var(--muted-foreground)] text-[11px] mt-0.5">シニア：<strong>協力</strong>をセットしてサポカ分身ワープ＆友情ブースト！</div>
+          </div>
+          <div class="p-2.5 bg-[var(--card)] rounded-lg border border-[var(--border)]">
+            <div class="font-bold text-emerald-500">体力削り枠</div>
+            <div class="text-[var(--muted-foreground)] text-[11px] mt-0.5">シニア：<strong>不屈</strong>をセットして、Lv10で体力0でも失敗率0%で連打！</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Key Highlight: SSR 吾妻 (無凸適性) -->
+    <div class="bg-gradient-to-br from-purple-500/10 via-[var(--card)] to-rose-500/10 border-2 border-purple-500/30 rounded-2xl p-5 md:p-6 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1.5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 bg-purple-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
+              <span>👑 シナリオ人権友人サポカ</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5 bg-emerald-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
+              <span>✨ 無凸（1枚）でも即戦力稼働！</span>
+            </span>
+          </div>
+          <h2 class="text-xl md:text-2xl font-extrabold text-[var(--foreground)]">
+            友人SSR［いとめでたき、まつりかな］吾妻
+          </h2>
+          <p class="text-xs md:text-sm text-[var(--muted-foreground)]">
+            演目Lv上限引き上げなどのシナリオギミック性能が<strong>凸数に依存しない</strong>ことが検証で判明！無凸でも最優先で編成すべし。
+          </p>
+        </div>
+        <div class="shrink-0 flex items-center gap-2">
+          <div class="bg-[var(--background)] border border-purple-500/30 rounded-xl px-4 py-2.5 text-center">
+            <div class="text-xs text-[var(--muted-foreground)]">演目Lv上限</div>
+            <div class="text-xl font-black text-purple-600 dark:text-purple-400">Lv.6 → 10</div>
+          </div>
+          <div class="bg-[var(--background)] border border-purple-500/30 rounded-xl px-4 py-2.5 text-center">
+            <div class="text-xs text-[var(--muted-foreground)]">お出かけ恩恵</div>
+            <div class="text-xl font-black text-rose-500">最低Lv +1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deck Strategy: Established Golden Balance -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+        <h2 class="text-lg font-bold text-[var(--foreground)] flex items-center gap-2">
+          <span>🎴</span> 距離別・最強黄金デッキテンプレ（実戦確立版）
+        </h2>
+        <span class="text-xs text-emerald-500 font-bold bg-emerald-500/10 px-2 py-1 rounded">5種類ルール適合</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Deck 1: 中・長距離 -->
+        <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">中距離・長距離向け</span>
+            <span class="text-xs font-semibold text-[var(--muted-foreground)]">スタミナ確保型</span>
+          </div>
+          <h3 class="font-bold text-base text-[var(--foreground)]">スピ2 ＋ スタ1 ＋ パワ1 ＋ 賢1 ＋ 吾妻</h3>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            スピード上限2200を狙いつつスタミナ枠を確保。5種類ルールを満たして大量のスキルPtと高いステータスを獲得可能！
+          </p>
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <span class="px-2 py-1 bg-red-500/10 text-red-500 text-[11px] font-bold rounded">スピ×2</span>
+            <span class="px-2 py-1 bg-amber-500/10 text-amber-500 text-[11px] font-bold rounded">スタミナ</span>
+            <span class="px-2 py-1 bg-orange-500/10 text-orange-500 text-[11px] font-bold rounded">パワー</span>
+            <span class="px-2 py-1 bg-blue-500/10 text-blue-500 text-[11px] font-bold rounded">賢さ</span>
+            <span class="px-2 py-1 bg-purple-500/10 text-purple-500 text-[11px] font-bold rounded">友人(吾妻)</span>
+          </div>
+        </div>
+
+        <!-- Deck 2: 短距離・マイル -->
+        <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded">短距離・マイル向け</span>
+            <span class="text-xs font-semibold text-[var(--muted-foreground)]">高評価点・根性型</span>
+          </div>
+          <h3 class="font-bold text-base text-[var(--foreground)]">スピ2 ＋ パワ1 ＋ 根1 ＋ 賢1 ＋ 吾妻</h3>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            スタミナが不要な距離での最高評価点狙い構成。根性とパワーを同時に伸ばして新ランク「LG」を最も狙いやすい環境トップ型！
+          </p>
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <span class="px-2 py-1 bg-red-500/10 text-red-500 text-[11px] font-bold rounded">スピ×2</span>
+            <span class="px-2 py-1 bg-orange-500/10 text-orange-500 text-[11px] font-bold rounded">パワー</span>
+            <span class="px-2 py-1 bg-pink-500/10 text-pink-500 text-[11px] font-bold rounded">根性</span>
+            <span class="px-2 py-1 bg-blue-500/10 text-blue-500 text-[11px] font-bold rounded">賢さ</span>
+            <span class="px-2 py-1 bg-purple-500/10 text-purple-500 text-[11px] font-bold rounded">友人(吾妻)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario Link Heroes -->
+      <div class="bg-gradient-to-r from-amber-500/10 to-transparent p-3 rounded-lg border border-amber-500/20 text-xs flex flex-wrap items-center gap-2">
+        <span class="font-bold text-amber-500">✨ シナリオリンク優遇キャラ（ゲージ獲得UP＆スキル進化）:</span>
+        <span class="bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[var(--foreground)] font-medium">ダイワスカーレット</span>
+        <span class="bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[var(--foreground)] font-medium">マヤノトップガン(新SSRパワ)</span>
+        <span class="bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[var(--foreground)] font-medium">ノーリーズン</span>
+        <span class="bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[var(--foreground)] font-medium">ユキノビジン</span>
+        <span class="bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[var(--foreground)] font-medium">ブラストワンピース</span>
+      </div>
+    </div>
+
+    <!-- Timeline & Playstyle Steps -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+      <h2 class="text-lg font-bold text-[var(--foreground)] flex items-center gap-2">
+        <span>⏱️</span> 育成フェーズ別・最新立ち回りフロー
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <!-- Junior -->
+        <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-1.5 relative overflow-hidden">
+          <div class="text-xs font-bold text-rose-500">PHASE 01 (ジュニア期)</div>
+          <div class="font-bold text-[var(--foreground)] text-sm">絆＆教え回収（多人数練習最優先）</div>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            得意練習にこだわらず人が集まる練習を踏む！スピード枠に「絆の教え」を刺して最速で友情トレーニングを解禁させるのがコツ。
+          </p>
+        </div>
+
+        <!-- Classic -->
+        <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-1.5 relative overflow-hidden">
+          <div class="text-xs font-bold text-amber-500">PHASE 02 (クラシック期)</div>
+          <div class="font-bold text-[var(--foreground)] text-sm">友情×演目稽古＆凹みはお出かけ</div>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            演目稽古は友情トレと重なった瞬間に踏んで爆発させる！Lvが凹んだ演目はお出かけ（最低Lv+1）でバランスよく引き上げ。
+          </p>
+        </div>
+
+        <!-- Senior & URA -->
+        <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-1.5 relative overflow-hidden">
+          <div class="text-xs font-bold text-emerald-500">PHASE 03 (シニア期〜URA)</div>
+          <div class="font-bold text-[var(--foreground)] text-sm">不屈Lv10×両道Lv10で限界突破！</div>
+          <p class="text-xs text-[var(--muted-foreground)]">
+            育ちきったLv10演目と「不屈の教え（体力0でも失敗率0%）」を活用し、終盤の超強力練習をノーリスク連打してLGランクへ到達！
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer summary -->
+    <div class="text-center text-xs text-[var(--muted-foreground)] pt-2 pb-4">
+      <p>※ウマ娘公式ヘルプおよび最新YouTube検証・大手攻略サイト検証データ完全統合版。</p>
+    </div>
+
+  </div>
+
+  <!-- Tab Switch Script -->
+  <script>
+    function switchOshieTab(tabIndex) {
+      for (let i = 1; i <= 3; i++) {
+        const content = document.getElementById('tab-content-' + i);
+        const btn = document.getElementById('tab-btn-' + i);
+        if (i === tabIndex) {
+          content.classList.remove('hidden');
+          btn.className = 'px-3 py-1.5 rounded-lg bg-amber-500 text-white transition-all shadow-sm';
+        } else {
+          content.classList.add('hidden');
+          btn.className = 'px-3 py-1.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

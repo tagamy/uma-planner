@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { GameState } from '../types';
 import { SKILL_FOCUSED_TARGETS, DEFAULT_CURRENT_LEVELS } from '../constants/beyondDreams';
+import { DEFAULT_SHUNTAISAI_ENMOKU } from '../constants/shuntaisaiData';
 
 const STORAGE_KEY = 'uma-training-app-state';
 
@@ -31,7 +32,7 @@ export const defaultState: GameState = {
         targets: SKILL_FOCUSED_TARGETS,
         currentLevels: DEFAULT_CURRENT_LEVELS,
     },
-    selectedScenario: 'torisenKen',
+    selectedScenario: 'shuntaisai',
     torisenKen: {
         tips: { noodles: 0, soup: 0, toppings: 0, secret: 0 },
         regions: {
@@ -47,6 +48,12 @@ export const defaultState: GameState = {
         },
         ultimateRamen: '',
     },
+    shuntaisai: {
+        hasAzuma: true,
+        outingCount: 0,
+        presetName: 'middle_long',
+        enmoku: DEFAULT_SHUNTAISAI_ENMOKU,
+    },
     records: []
 };
 
@@ -56,6 +63,7 @@ export const useGameState = () => {
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
+                const isFirstShuntaisaiLoad = !parsed.shuntaisai;
                 // デフォルトとマージして返す (フィールド追加時対策)
                 return {
                     ...defaultState,
@@ -74,7 +82,7 @@ export const useGameState = () => {
                     // カスタム追加されたスキルが消えないよう、IDベースでマージ
                     inheritedSkills: parsed.inheritedSkills || defaultState.inheritedSkills,
                     beyondDreams: parsed.beyondDreams || defaultState.beyondDreams,
-                    selectedScenario: parsed.selectedScenario ?? 'torisenKen',
+                    selectedScenario: isFirstShuntaisaiLoad ? 'shuntaisai' : (parsed.selectedScenario ?? 'shuntaisai'),
                     torisenKen: parsed.torisenKen ? { 
                         ...defaultState.torisenKen, 
                         ...parsed.torisenKen,
@@ -82,6 +90,14 @@ export const useGameState = () => {
                         regions: Array.isArray(parsed.torisenKen.regions) ? defaultState.torisenKen.regions : (parsed.torisenKen.regions || defaultState.torisenKen.regions),
                         ramenCounts: parsed.torisenKen.ramenCounts?.junior ? parsed.torisenKen.ramenCounts : defaultState.torisenKen.ramenCounts
                     } : defaultState.torisenKen,
+                    shuntaisai: parsed.shuntaisai ? {
+                        ...defaultState.shuntaisai,
+                        ...parsed.shuntaisai,
+                        enmoku: {
+                            ...defaultState.shuntaisai.enmoku,
+                            ...(parsed.shuntaisai.enmoku || {}),
+                        },
+                    } : defaultState.shuntaisai,
                     records: Array.isArray(parsed.records) ? parsed.records : defaultState.records,
                 };
             } catch (e) {

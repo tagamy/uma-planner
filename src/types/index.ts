@@ -66,8 +66,28 @@ export interface TorisenKenState {
     ultimateRamen: string; // 究極ラーメンの選択メモ
 }
 
+export type EnmokuKey = 'speed' | 'stamina' | 'power' | 'guts' | 'wisdom';
+export type JuniorOshie = '絆' | '得意率' | 'ヒント' | '助力' | '体力' | '';
+export type ClassicOshie = '特化' | '研鑽' | '';
+export type SeniorOshie = '協力' | '不屈' | '両道' | '';
+
+export interface EnmokuPlan {
+    level: number;
+    junior: JuniorOshie;
+    classic: ClassicOshie;
+    senior: SeniorOshie;
+}
+
+export interface ShuntaisaiState {
+    hasAzuma: boolean;
+    outingCount: number; // 0〜5
+    presetName: string;
+    enmoku: Record<EnmokuKey, EnmokuPlan>;
+}
+
 export interface TrainingRecord {
     id: string;
+    scenario?: 'shuntaisai' | 'torisenKen' | 'beyondDreams';
     rank: string;
     score: string;
     sp: string;
@@ -86,6 +106,11 @@ export interface TrainingRecord {
             senior: [number, number, number];
         };
     };
+    shuntaisai?: {
+        hasAzuma: boolean;
+        outingCount: number;
+        enmoku: Record<EnmokuKey, EnmokuPlan>;
+    };
     createdAt: number;
 }
 
@@ -95,7 +120,8 @@ export interface GameState {
     aptitudeS: AptitudeSState;
     inheritedSkills: InheritedSkill[];
     beyondDreams: BeyondDreamsState;
-    selectedScenario: 'beyondDreams' | 'torisenKen';
+    selectedScenario: 'shuntaisai' | 'torisenKen' | 'beyondDreams';
     torisenKen: TorisenKenState;
+    shuntaisai: ShuntaisaiState;
     records: TrainingRecord[];
 }
