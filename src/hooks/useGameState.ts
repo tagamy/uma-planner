@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { GameState } from '../types';
 import { SKILL_FOCUSED_TARGETS, DEFAULT_CURRENT_LEVELS } from '../constants/beyondDreams';
-import { DEFAULT_SHUNTAISAI_ENMOKU } from '../constants/shuntaisaiData';
+import {
+    DEFAULT_TENSEI_PAIRS,
+    DEFAULT_PLACEMENTS,
+    DEFAULT_LEVELS,
+} from '../constants/shuntaisaiData';
 
 const STORAGE_KEY = 'uma-training-app-state';
 
@@ -51,8 +55,11 @@ export const defaultState: GameState = {
     shuntaisai: {
         hasAzuma: true,
         outingCount: 0,
-        presetName: 'middle_long',
-        enmoku: DEFAULT_SHUNTAISAI_ENMOKU,
+        presetName: 'wisdom_tokka',
+        activeStep: 0,
+        levels: DEFAULT_LEVELS,
+        tenseiPairs: DEFAULT_TENSEI_PAIRS,
+        placements: DEFAULT_PLACEMENTS,
     },
     records: []
 };
@@ -64,7 +71,9 @@ export const useGameState = () => {
             try {
                 const parsed = JSON.parse(saved);
                 const isFirstShuntaisaiLoad = !parsed.shuntaisai;
-                // デフォルトとマージして返す (フィールド追加時対策)
+                const s = parsed.shuntaisai;
+
+                // デフォルトとマージして返す (フィールド追加・構造変更時対策)
                 return {
                     ...defaultState,
                     ...parsed,
@@ -79,7 +88,6 @@ export const useGameState = () => {
                         acquired: parsed.kiremono?.acquired ?? false,
                     },
                     aptitudeS: { ...defaultState.aptitudeS, ...parsed.aptitudeS },
-                    // カスタム追加されたスキルが消えないよう、IDベースでマージ
                     inheritedSkills: parsed.inheritedSkills || defaultState.inheritedSkills,
                     beyondDreams: parsed.beyondDreams || defaultState.beyondDreams,
                     selectedScenario: isFirstShuntaisaiLoad ? 'shuntaisai' : (parsed.selectedScenario ?? 'shuntaisai'),
@@ -90,13 +98,14 @@ export const useGameState = () => {
                         regions: Array.isArray(parsed.torisenKen.regions) ? defaultState.torisenKen.regions : (parsed.torisenKen.regions || defaultState.torisenKen.regions),
                         ramenCounts: parsed.torisenKen.ramenCounts?.junior ? parsed.torisenKen.ramenCounts : defaultState.torisenKen.ramenCounts
                     } : defaultState.torisenKen,
-                    shuntaisai: parsed.shuntaisai ? {
-                        ...defaultState.shuntaisai,
-                        ...parsed.shuntaisai,
-                        enmoku: {
-                            ...defaultState.shuntaisai.enmoku,
-                            ...(parsed.shuntaisai.enmoku || {}),
-                        },
+                    shuntaisai: s ? {
+                        hasAzuma: s.hasAzuma ?? true,
+                        outingCount: s.outingCount ?? 0,
+                        presetName: s.presetName || 'middle_long',
+                        activeStep: typeof s.activeStep === 'number' ? s.activeStep : 0,
+                        levels: s.levels ? { ...defaultState.shuntaisai.levels, ...s.levels } : defaultState.shuntaisai.levels,
+                        tenseiPairs: s.tenseiPairs ? { ...defaultState.shuntaisai.tenseiPairs, ...s.tenseiPairs } : defaultState.shuntaisai.tenseiPairs,
+                        placements: Array.isArray(s.placements) && s.placements.length === 6 ? s.placements : defaultState.shuntaisai.placements,
                     } : defaultState.shuntaisai,
                     records: Array.isArray(parsed.records) ? parsed.records : defaultState.records,
                 };

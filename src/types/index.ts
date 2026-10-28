@@ -67,22 +67,24 @@ export interface TorisenKenState {
 }
 
 export type EnmokuKey = 'speed' | 'stamina' | 'power' | 'guts' | 'wisdom';
-export type JuniorOshie = '絆' | '得意率' | 'ヒント' | '助力' | '体力' | '';
-export type ClassicOshie = '特化' | '研鑽' | '';
-export type SeniorOshie = '協力' | '不屈' | '両道' | '';
+export type JuniorOshie = '絆' | '得意率' | 'ヒント' | '助力' | '体力';
+export type UpgradedOshie = '特化' | '研鑽' | '協力' | '不屈' | '両道';
+export type AnyOshie = JuniorOshie | UpgradedOshie | '';
 
-export interface EnmokuPlan {
-    level: number;
-    junior: JuniorOshie;
-    classic: ClassicOshie;
-    senior: SeniorOshie;
-}
+// 5つの転成教えそれぞれについて、どの初期教え(JuniorOshie)をベースに転成したか
+export type TenseiPairs = Record<UpgradedOshie, JuniorOshie>;
+
+// 1回の時期における5演目それぞれの教え配置
+export type PeriodPlacement = Record<EnmokuKey, AnyOshie>;
 
 export interface ShuntaisaiState {
     hasAzuma: boolean;
     outingCount: number; // 0〜5
     presetName: string;
-    enmoku: Record<EnmokuKey, EnmokuPlan>;
+    activeStep: number; // 0〜5 (現在の時期インデックス: 全6回)
+    levels: Record<EnmokuKey, number>; // 5演目の現在Lv (1〜10)
+    tenseiPairs: TenseiPairs; // ジュニア終了時2つ(特化/研鑽)＋クラシック終了時3つ(協力/不屈/両道)の転成元
+    placements: PeriodPlacement[]; // 長さ6の配列（全6回の配置）
 }
 
 export interface TrainingRecord {
@@ -109,7 +111,9 @@ export interface TrainingRecord {
     shuntaisai?: {
         hasAzuma: boolean;
         outingCount: number;
-        enmoku: Record<EnmokuKey, EnmokuPlan>;
+        levels: Record<EnmokuKey, number>;
+        tenseiPairs: TenseiPairs;
+        placements: PeriodPlacement[];
     };
     createdAt: number;
 }

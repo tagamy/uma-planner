@@ -121,7 +121,9 @@ function App() {
       shuntaisai: {
         hasAzuma: state.shuntaisai.hasAzuma,
         outingCount: state.shuntaisai.outingCount,
-        enmoku: state.shuntaisai.enmoku,
+        levels: state.shuntaisai.levels,
+        tenseiPairs: state.shuntaisai.tenseiPairs,
+        placements: state.shuntaisai.placements,
       },
       createdAt: Date.now()
     };

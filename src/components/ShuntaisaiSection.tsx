@@ -6,15 +6,21 @@ import type {
     TrainingRecord,
     EnmokuKey,
     JuniorOshie,
-    ClassicOshie,
-    SeniorOshie,
+    UpgradedOshie,
+    AnyOshie,
 } from '../types';
 import {
     ENMOKU_LIST,
+    ALL_JUNIOR_OSHIE,
+    CLASSIC_UPGRADED_OSHIE,
+    SENIOR_UPGRADED_OSHIE,
+    ALL_UPGRADED_OSHIE,
+    SHUNTAISAI_PERIODS,
     JUNIOR_OSHIE_DATA,
     SHUNTAISAI_PRESETS,
-    getClassicOshieEffectText,
-    getSeniorOshieEffectText,
+    isUpgradedOshie,
+    getAvailableOshieForStep,
+    getOshieEffectByLevel,
     getFukutsuStatus,
 } from '../constants/shuntaisaiData';
 
@@ -27,10 +33,6 @@ interface ShuntaisaiSectionProps {
     onAddRecord: (rank: string, score: string, sp: string, juniorSp: string, classicSp: string) => void;
     onClearRecords: () => void;
 }
-
-const JUNIOR_OPTIONS: Exclude<JuniorOshie, ''>[] = ['絆', '得意率', 'ヒント', '助力', '体力'];
-const CLASSIC_OPTIONS: Exclude<ClassicOshie, ''>[] = ['特化', '研鑽'];
-const SENIOR_OPTIONS: Exclude<SeniorOshie, ''>[] = ['協力', '不屈', '両道'];
 
 export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
     state,
@@ -61,79 +63,139 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
     // 演目Lv上限（吾妻あり: 10 / なし: 6）
     const maxLevel = state.hasAzuma ? 10 : 6;
 
-    // 最低Lvの算出（吾妻のお出かけ「最低Lv+1」対象）
-    const levels = ENMOKU_LIST.map(e => state.enmoku[e.key]?.level || 1);
-    const minLevel = Math.min(...levels);
-    const totalLevel = levels.reduce((acc, v) => acc + v, 0);
+    // 合計Lvの算出
+    const levelsArr = ENMOKU_LIST.map(e => state.levels[e.key] || 1);
+    const totalLevel = levelsArr.reduce((acc, v) => acc + v, 0);
+
+    const activeStep = Math.max(0, Math.min(5, state.activeStep || 0));
+    const currentPeriod = SHUNTAISAI_PERIODS[activeStep];
+    const currentPlacement = state.placements[activeStep] || {
+        speed: '',
+        stamina: '',
+        power: '',
+        guts: '',
+        wisdom: '',
+    };
+    const prevPlacement = activeStep > 0 ? state.placements[activeStep - 1] : null;
+
+    // ジュニア終了時に転成しない残り3つの初期教え
+    const usedInClassicSet = new Set<JuniorOshie>([
+        state.tenseiPairs['特化'],
+        state.tenseiPairs['研鑽'],
+    ]);
+    const unupgradedInClassic = ALL_JUNIOR_OSHIE.filter(j => !usedInClassicSet.has(j));
 
     const handleLevelChange = (key: EnmokuKey, delta: number) => {
         onChangeState(prev => {
-            const cur = prev.enmoku[key]?.level || 1;
+            const cur = prev.levels[key] || 1;
             const limit = prev.hasAzuma ? 10 : 6;
             const next = Math.max(1, Math.min(limit, cur + delta));
             return {
                 ...prev,
-                enmoku: {
-                    ...prev.enmoku,
-                    [key]: {
-                        ...prev.enmoku[key],
-                        level: next,
-                    },
+                levels: {
+                    ...prev.levels,
+                    [key]: next,
                 },
             };
         });
     };
 
-    const handleResetLevels = () => {
-        onChangeState(prev => {
-            const nextEnmoku = { ...prev.enmoku };
-            (Object.keys(nextEnmoku) as EnmokuKey[]).forEach(k => {
-                nextEnmoku[k] = { ...nextEnmoku[k], level: 1 };
-            });
-            return {
-                ...prev,
-                outingCount: 0,
-                enmoku: nextEnmoku,
-            };
-        });
-    };
-
-    const handleOshieChange = <K extends 'junior' | 'classic' | 'senior'>(
-        key: EnmokuKey,
-        period: K,
-        value: ShuntaisaiState['enmoku'][EnmokuKey][K]
-    ) => {
+    const handleResetProgress = () => {
         onChangeState(prev => ({
             ...prev,
-            presetName: 'custom',
-            enmoku: {
-                ...prev.enmoku,
-                [key]: {
-                    ...prev.enmoku[key],
-                    [period]: value,
-                },
+            outingCount: 0,
+            activeStep: 0,
+            levels: {
+                speed: 1,
+                stamina: 1,
+                power: 1,
+                guts: 1,
+                wisdom: 1,
             },
         }));
+    };
+
+    // 転成元の初期教えを変更（重複しないよう既存のペアと自動スワップし、第3・4回の未転成教え配置も同期）
+    const handleTenseiPairChange = (upgradedKey: UpgradedOshie, newBase: JuniorOshie) => {
+        onChangeState(prev => {
+            const oldBase = prev.tenseiPairs[upgradedKey];
+            if (oldBase === newBase) return prev;
+
+            const nextPairs = { ...prev.tenseiPairs };
+            // すでに newBase を使っている他の UpgradedOshie を探して oldBase と入れ替える
+            const otherKey = ALL_UPGRADED_OSHIE.find(k => k !== upgradedKey && prev.tenseiPairs[k] === newBase);
+            nextPairs[upgradedKey] = newBase;
+            if (otherKey) {
+                nextPairs[otherKey] = oldBase;
+            }
+
+            // クラシック期（step 2, 3）で使える未転成初期教えが変わった場合、配置内の古い初期教えを新しい初期教えに置き換える
+            const nextUsedClassic = new Set<JuniorOshie>([nextPairs['特化'], nextPairs['研鑽']]);
+            const nextRemaining = ALL_JUNIOR_OSHIE.filter(j => !nextUsedClassic.has(j));
+
+            const nextPlacements = prev.placements.map((pl, idx) => {
+                if (idx !== 2 && idx !== 3) return pl;
+                const updated = { ...pl };
+                (Object.keys(updated) as EnmokuKey[]).forEach(eKey => {
+                    const val = updated[eKey];
+                    if (val && !isUpgradedOshie(val) && nextUsedClassic.has(val as JuniorOshie)) {
+                        // 使われていない残りの初期教えに差し替え
+                        const usedInRow = new Set(Object.values(updated));
+                        const replacement = nextRemaining.find(r => !usedInRow.has(r)) || nextRemaining[0];
+                        updated[eKey] = replacement;
+                    }
+                });
+                return updated;
+            });
+
+            return {
+                ...prev,
+                presetName: 'custom',
+                tenseiPairs: nextPairs,
+                placements: nextPlacements,
+            };
+        });
+    };
+
+    // 指定した時期(stepIndex)の指定演目(enmokuKey)に教えをセット（同じ時期内で既に別の演目にセットされていたら自動スワップ！）
+    const handlePlacementChange = (stepIndex: number, enmokuKey: EnmokuKey, newOshie: AnyOshie) => {
+        onChangeState(prev => {
+            const nextPlacements = prev.placements.map((p, idx) => {
+                if (idx !== stepIndex) return p;
+                const row = { ...p };
+                const oldOshie = row[enmokuKey];
+                if (oldOshie === newOshie) return row;
+
+                if (newOshie !== '') {
+                    const otherEnmoku = (Object.keys(row) as EnmokuKey[]).find(
+                        k => k !== enmokuKey && row[k] === newOshie
+                    );
+                    if (otherEnmoku) {
+                        row[otherEnmoku] = oldOshie;
+                    }
+                }
+                row[enmokuKey] = newOshie;
+                return row;
+            });
+
+            return {
+                ...prev,
+                presetName: 'custom',
+                placements: nextPlacements,
+            };
+        });
     };
 
     const handleApplyPreset = (presetId: string, alsoApplyDeck: boolean) => {
         const preset = SHUNTAISAI_PRESETS.find(p => p.id === presetId);
         if (!preset) return;
 
-        onChangeState(prev => {
-            const nextEnmoku = { ...prev.enmoku };
-            (Object.keys(preset.enmoku) as EnmokuKey[]).forEach(k => {
-                nextEnmoku[k] = {
-                    level: prev.enmoku[k]?.level || 1,
-                    ...preset.enmoku[k],
-                };
-            });
-            return {
-                ...prev,
-                presetName: preset.id,
-                enmoku: nextEnmoku,
-            };
-        });
+        onChangeState(prev => ({
+            ...prev,
+            presetName: preset.id,
+            tenseiPairs: { ...preset.tenseiPairs },
+            placements: preset.placements.map(p => ({ ...p })),
+        }));
 
         if (alsoApplyDeck && preset.deckTypes) {
             onApplyDeckPreset(preset.deckTypes);
@@ -144,16 +206,16 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
         onChangeState(prev => {
             const nextHasAzuma = !prev.hasAzuma;
             const limit = nextHasAzuma ? 10 : 6;
-            const nextEnmoku = { ...prev.enmoku };
-            (Object.keys(nextEnmoku) as EnmokuKey[]).forEach(k => {
-                if (nextEnmoku[k].level > limit) {
-                    nextEnmoku[k] = { ...nextEnmoku[k], level: limit };
+            const nextLevels = { ...prev.levels };
+            (Object.keys(nextLevels) as EnmokuKey[]).forEach(k => {
+                if (nextLevels[k] > limit) {
+                    nextLevels[k] = limit;
                 }
             });
             return {
                 ...prev,
                 hasAzuma: nextHasAzuma,
-                enmoku: nextEnmoku,
+                levels: nextLevels,
             };
         });
     };
@@ -166,7 +228,7 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
     };
 
     const handleShare = () => {
-        const text = `ウマ娘の新シナリオ「朋、史解き ―午式駿大祭―」で育成中！⛩️🔥\n教え転成＆不屈Lv10で最高峰LGランクを目指すよっ！\n\n`;
+        const text = `ウマ娘の新シナリオ「朋、史解き ―午式駿大祭―」で育成中！⛩️🔥\n6回の教え配置＆転成ルート管理でLGランクを目指すよっ！\n\n`;
         const url = 'https://uma.tagamy.com/';
         const hashtags = 'ウマ娘,午式駿大祭';
         const intentUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=${encodeURIComponent(hashtags)}`;
@@ -195,16 +257,17 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
             ];
 
             if (record.shuntaisai) {
+                const pairs = record.shuntaisai.tenseiPairs;
+                // 転成ペア概要
+                parts.push(
+                    ALL_UPGRADED_OSHIE.map(u => `${u}[${pairs?.[u] || '-'}]`).join('/')
+                );
+                // 5演目最終Lvと最終配置(step 5)
+                const finalPlace = record.shuntaisai.placements?.[5];
                 ENMOKU_LIST.forEach(meta => {
-                    const plan = record.shuntaisai?.enmoku[meta.key];
-                    if (plan) {
-                        parts.push(
-                            `${plan.junior || '-'}→${plan.classic || '-'}→${plan.senior || '-'}`,
-                            `Lv${plan.level}`
-                        );
-                    } else {
-                        parts.push('-', 'Lv1');
-                    }
+                    const lv = record.shuntaisai?.levels?.[meta.key] || 1;
+                    const oshie = finalPlace?.[meta.key] || '-';
+                    parts.push(`${oshie}(Lv${lv})`);
                 });
             } else if (record.torisenKen) {
                 for (let i = 0; i < 3; i++) {
@@ -235,6 +298,8 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
             alert('コピーに失敗しました。');
         });
     };
+
+    const availableForCurrentStep = getAvailableOshieForStep(activeStep, state.tenseiPairs);
 
     return (
         <section className="section shuntaisai-section">
@@ -295,12 +360,11 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                             <div style={{ fontSize: '0.8rem', color: isFiveTypesRuleMet ? '#388e3c' : '#d32f2f', marginTop: '0.15rem' }}>
                                 {isFiveTypesRuleMet
                                     ? 'シナリオ固有ボーナス「スキルPtトレーニング効果」＆「獲得上限アップ」が発動中です🔥'
-                                    : '5種類未満だと「スキルPtトレーニング効果」と「獲得上限アップ」が発動しません！下のデッキプリセットかサポカ欄で調整しよう！'}
+                                    : '5種類未満だと「スキルPtトレーニング効果」と「獲得上限アップ」が発動しません！'}
                             </div>
                         </div>
                     </div>
 
-                    {/* デッキタイプ一括プリセット */}
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                         <button
                             onClick={() => onApplyDeckPreset(['スピード', 'スピード', 'スタミナ', 'パワー', '賢さ'])}
@@ -314,7 +378,6 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                 cursor: 'pointer',
                                 fontWeight: 'bold',
                             }}
-                            title="サポカ5枠を スピ2/スタ1/パワ1/賢1 に設定します"
                         >
                             🎴 中・長距離デッキ適用
                         </button>
@@ -330,7 +393,6 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                 cursor: 'pointer',
                                 fontWeight: 'bold',
                             }}
-                            title="サポカ5枠を スピ2/パワ1/根性1/賢1 に設定します"
                         >
                             🎴 短・マイルデッキ適用
                         </button>
@@ -350,35 +412,33 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                         gap: '0.75rem',
                     }}
                 >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <label
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.4rem',
-                                cursor: 'pointer',
-                                fontWeight: 'bold',
-                                fontSize: '0.9rem',
-                                color: '#4a148c',
-                                backgroundColor: '#f3e5f5',
-                                padding: '0.3rem 0.7rem',
-                                borderRadius: '6px',
-                                border: '1px solid #ce93d8',
-                            }}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={state.hasAzuma}
-                                onChange={handleToggleAzuma}
-                                style={{ cursor: 'pointer' }}
-                            />
-                            <span>👑 友人SSR「吾妻」編成（演目上限 Lv.{maxLevel}）</span>
-                        </label>
-                    </div>
+                    <label
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '0.88rem',
+                            color: '#4a148c',
+                            backgroundColor: '#f3e5f5',
+                            padding: '0.3rem 0.7rem',
+                            borderRadius: '6px',
+                            border: '1px solid #ce93d8',
+                        }}
+                    >
+                        <input
+                            type="checkbox"
+                            checked={state.hasAzuma}
+                            onChange={handleToggleAzuma}
+                            style={{ cursor: 'pointer' }}
+                        />
+                        <span>👑 友人SSR「吾妻」編成（演目上限 Lv.{maxLevel}）</span>
+                    </label>
 
                     {state.hasAzuma && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#6a1b9a' }}>
+                            <span style={{ fontSize: '0.84rem', fontWeight: 'bold', color: '#6a1b9a' }}>
                                 👘 吾妻お出かけ（最低演目Lv+1）:
                             </span>
                             <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
@@ -418,18 +478,18 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                 </div>
             </div>
 
-            {/* 2. おすすめ転成ビルド・プリセット */}
+            {/* 2. おすすめ転成ビルドルート・プリセット */}
             <div className="card" style={{ marginBottom: '1.25rem', padding: '1rem 1.25rem', backgroundColor: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.6rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1rem', color: '#e65100', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <span>🎯 おすすめ転成ビルドルート・プリセット</span>
                     </h3>
                     <span style={{ fontSize: '0.78rem', color: '#666' }}>
-                        ワンタップで5演目の「ジュニア→クラシック→シニア」教え計画をセット！
+                        「Jr終了時2つ転成＋Cl終了時3つ転成」と「全6回の教え配置スケジュール」を一括セット！
                     </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '0.6rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.65rem' }}>
                     {SHUNTAISAI_PRESETS.map(preset => {
                         const isSelected = state.presetName === preset.id;
                         return (
@@ -443,19 +503,23 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                     display: 'flex',
                                     flexDirection: 'column',
                                     justifyContent: 'space-between',
-                                    gap: '0.5rem',
+                                    gap: '0.55rem',
                                 }}
                             >
                                 <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                                        <span style={{ fontWeight: 'bold', fontSize: '0.88rem', color: '#333' }}>{preset.name}</span>
-                                        <span style={{ fontSize: '0.7rem', backgroundColor: '#ffe0b2', color: '#e65100', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.25rem', marginBottom: '0.3rem' }}>
+                                        <span style={{ fontWeight: 'bold', fontSize: '0.86rem', color: '#333' }}>{preset.name}</span>
+                                        <span style={{ fontSize: '0.68rem', backgroundColor: '#ffe0b2', color: '#e65100', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                             {preset.badge}
                                         </span>
                                     </div>
-                                    <p style={{ margin: 0, fontSize: '0.76rem', color: '#666', lineHeight: 1.4 }}>
+                                    <p style={{ margin: '0 0 0.4rem 0', fontSize: '0.75rem', color: '#555', lineHeight: 1.4 }}>
                                         {preset.description}
                                     </p>
+                                    <div style={{ fontSize: '0.72rem', backgroundColor: '#fafafa', padding: '0.35rem 0.5rem', borderRadius: '4px', border: '1px solid #eee', color: '#444', lineHeight: 1.45 }}>
+                                        <div><strong>Jr転成(2つ):</strong> 特化[{preset.tenseiPairs['特化']}] ／ 研鑽[{preset.tenseiPairs['研鑽']}]</div>
+                                        <div><strong>Cl転成(3つ):</strong> 協力[{preset.tenseiPairs['協力']}] ／ 不屈[{preset.tenseiPairs['不屈']}] ／ 両道[{preset.tenseiPairs['両道']}]</div>
+                                    </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.4rem' }}>
                                     <button
@@ -467,12 +531,12 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                             color: '#fff',
                                             border: 'none',
                                             borderRadius: '4px',
-                                            fontSize: '0.78rem',
+                                            fontSize: '0.76rem',
                                             fontWeight: 'bold',
                                             cursor: 'pointer',
                                         }}
                                     >
-                                        📜 教えのみ適用
+                                        📜 ルートを適用
                                     </button>
                                     {preset.deckTypes && (
                                         <button
@@ -483,11 +547,10 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                                 color: '#bf360c',
                                                 border: '1px solid #ffb74d',
                                                 borderRadius: '4px',
-                                                fontSize: '0.75rem',
+                                                fontSize: '0.74rem',
                                                 fontWeight: 'bold',
                                                 cursor: 'pointer',
                                             }}
-                                            title="サポカ5枠のタイプも同時に変更します"
                                         >
                                             ＋サポカも適用
                                         </button>
@@ -497,21 +560,122 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                         );
                     })}
                 </div>
+
+                <details style={{ marginTop: '0.75rem', fontSize: '0.82rem', color: '#444' }}>
+                    <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: '#d84315' }}>
+                        💡 SPの稼ぎ方＆稽古Lvの立ち回りポイント（クリックで開く）
+                    </summary>
+                    <div style={{ padding: '0.75rem', marginTop: '0.45rem', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #ffe082', lineHeight: 1.55 }}>
+                        <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                            <li><strong>クラシック年末まで</strong>：<strong>スピ稽古中心</strong>に演目Lvを上げる！</li>
+                            <li><strong>シニア合宿までに</strong>：<strong style={{ color: '#d32f2f' }}>スピ稽古Lv9〜MAXを目指す！</strong> ➡️ 合宿はスピ3〜4回踏んでSPを盛りながら稼ぐ</li>
+                            <li><strong>シニア合宿明け後</strong>：<strong style={{ color: '#d32f2f' }}>凹んだステの稽古LvMAXを目指す！</strong>
+                                <div style={{ fontSize: '0.78rem', color: '#555' }}>
+                                    例：スタ・賢さの稽古Lvを上げる場合、パワ・根性の稽古ゲージをMAX維持しておくと、目標レースのゲージ上昇をスタ・賢さに確定で回せる！
+                                </div>
+                            </li>
+                            <li><strong>URA期間中</strong>：<strong style={{ color: '#d32f2f' }}>稽古LvMAXにしたステを上げる！</strong> ➡️ シニア合宿で他トレをするよりSP欠損が少なく済む✨</li>
+                        </ul>
+                    </div>
+                </details>
             </div>
 
-            {/* 3. 5演目の「教え＆転成ビルド表」＆ 現在Lvトラッカー */}
-            <div className="card" style={{ padding: '1.25rem', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
-                    <div>
-                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span>🏮 5演目「教え＆転成」進行トラッカー</span>
-                            <span style={{ fontSize: '0.85rem', backgroundColor: '#fce4ec', color: '#c2185b', padding: '0.15rem 0.6rem', borderRadius: '12px', fontWeight: 'bold' }}>
-                                合計 Lv.{totalLevel} / {maxLevel * 5}
-                            </span>
-                        </h3>
+            {/* 3. 「教え転成」の組み合わせ設定（Jr終了時2つ ＋ Cl終了時3つ） */}
+            <div className="card" style={{ marginBottom: '1.25rem', padding: '1rem 1.25rem', backgroundColor: '#fff', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <h3 style={{ margin: 0, fontSize: '0.98rem', color: '#333', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>🔄 「教え転成」の組み合わせ計画（どの初期教えを転成させるか）</span>
+                    </h3>
+                    <span style={{ fontSize: '0.75rem', color: '#666' }}>
+                        ※変更すると自動的に入れ替わり、下の6回スケジュールにも連動します
+                    </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem' }}>
+                    {/* ジュニア級終了時：2つの教えを転成 */}
+                    <div style={{ backgroundColor: '#fff3e0', border: '1px solid #ffcc80', borderRadius: '8px', padding: '0.75rem' }}>
+                        <div style={{ fontWeight: 'bold', fontSize: '0.84rem', color: '#e65100', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>① ジュニア12月後半終了時（2つ転成）</span>
+                            <span style={{ fontSize: '0.7rem', backgroundColor: '#ffe0b2', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>クラシック期〜永続</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                            {CLASSIC_UPGRADED_OSHIE.map(upKey => {
+                                const base = state.tenseiPairs[upKey];
+                                return (
+                                    <div key={upKey} style={{ backgroundColor: '#fff', padding: '0.45rem 0.55rem', borderRadius: '6px', border: '1px solid #ffe0b2' }}>
+                                        <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: upKey === '特化' ? '#c62828' : '#ef6c00', marginBottom: '0.2rem' }}>
+                                            {upKey}の教え ⬅️ 元:
+                                        </div>
+                                        <select
+                                            value={base}
+                                            onChange={e => handleTenseiPairChange(upKey, e.target.value as JuniorOshie)}
+                                            style={{ width: '100%', padding: '0.25rem', borderRadius: '4px', border: '1px solid #ccc', fontSize: '0.82rem', fontWeight: 'bold' }}
+                                        >
+                                            {ALL_JUNIOR_OSHIE.map(j => (
+                                                <option key={j} value={j}>{j}の教え</option>
+                                            ))}
+                                        </select>
+                                        <div style={{ fontSize: '0.68rem', color: JUNIOR_OSHIE_DATA[base].color, marginTop: '0.2rem', fontWeight: 'bold' }}>
+                                            {JUNIOR_OSHIE_DATA[base].badgeText}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#555', backgroundColor: 'rgba(255,255,255,0.75)', padding: '0.35rem 0.5rem', borderRadius: '4px' }}>
+                            💡 <strong>転成せずクラシック級でそのまま使う3つ：</strong>{' '}
+                            <strong style={{ color: '#333' }}>{unupgradedInClassic.map(j => `「${j}」`).join('・')}</strong>
+                        </div>
                     </div>
+
+                    {/* クラシック級終了時：残り3つの教えを転成 */}
+                    <div style={{ backgroundColor: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '8px', padding: '0.75rem' }}>
+                        <div style={{ fontWeight: 'bold', fontSize: '0.84rem', color: '#2e7d32', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>② クラシック12月後半終了時（残り3つ転成）</span>
+                            <span style={{ fontSize: '0.7rem', backgroundColor: '#c8e6c9', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>シニア期〜最終</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.45rem' }}>
+                            {SENIOR_UPGRADED_OSHIE.map(upKey => {
+                                const base = state.tenseiPairs[upKey];
+                                return (
+                                    <div key={upKey} style={{ backgroundColor: '#fff', padding: '0.45rem 0.5rem', borderRadius: '6px', border: '1px solid #c8e6c9' }}>
+                                        <div style={{ fontSize: '0.78rem', fontWeight: 'bold', color: upKey === '不屈' ? '#1b5e20' : upKey === '協力' ? '#1565c0' : '#e65100', marginBottom: '0.2rem' }}>
+                                            {upKey} ⬅️ 元:
+                                        </div>
+                                        <select
+                                            value={base}
+                                            onChange={e => handleTenseiPairChange(upKey, e.target.value as JuniorOshie)}
+                                            style={{ width: '100%', padding: '0.25rem', borderRadius: '4px', border: '1px solid #ccc', fontSize: '0.8rem', fontWeight: 'bold' }}
+                                        >
+                                            {ALL_JUNIOR_OSHIE.map(j => (
+                                                <option key={j} value={j}>{j}の教え</option>
+                                            ))}
+                                        </select>
+                                        <div style={{ fontSize: '0.66rem', color: JUNIOR_OSHIE_DATA[base].color, marginTop: '0.2rem', fontWeight: 'bold' }}>
+                                            {JUNIOR_OSHIE_DATA[base].badgeText}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#2e7d32', backgroundColor: 'rgba(255,255,255,0.75)', padding: '0.35rem 0.5rem', borderRadius: '4px' }}>
+                            💡 <strong>ジュニア終了時に転成した「特化」「研鑽」もそのままシニア級で継続使用します！</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 4. 5演目「教え＆転成」進行トラッカー（6回の時期切替 ＋ 演目Lv ＋ 6回スケジュール一覧表） */}
+            <div className="card" style={{ padding: '1.25rem', borderRadius: '8px', border: '1px solid #e0e0e0', backgroundColor: '#fff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span>🏮 5演目「教え＆転成」進行トラッカー</span>
+                        <span style={{ fontSize: '0.85rem', backgroundColor: '#fce4ec', color: '#c2185b', padding: '0.15rem 0.6rem', borderRadius: '12px', fontWeight: 'bold' }}>
+                            合計 Lv.{totalLevel} / {maxLevel * 5}
+                        </span>
+                    </h3>
                     <button
-                        onClick={handleResetLevels}
+                        onClick={handleResetProgress}
                         style={{
                             fontSize: '0.78rem',
                             padding: '0.3rem 0.7rem',
@@ -523,19 +687,85 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                             fontWeight: 'bold',
                         }}
                     >
-                        🔄 演目Lv・お出かけを1に戻す
+                        🔄 演目Lv・現在時期を最初に戻す
                     </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {/* 全6回の時期選択ステップバー */}
+                <div style={{ marginBottom: '1rem', backgroundColor: '#f8f9fa', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#555', marginBottom: '0.45rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
+                        <span>📅 現在の時期を選択（全6回の教えセットタイミング）:</span>
+                        {currentPeriod.tenseiBadge && (
+                            <span style={{ backgroundColor: '#d32f2f', color: '#fff', padding: '0.15rem 0.55rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                {currentPeriod.tenseiBadge}
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: '0.4rem' }}>
+                        {SHUNTAISAI_PERIODS.map(period => {
+                            const isActive = period.index === activeStep;
+                            const phaseColor = period.phase === 'junior' ? '#1976d2' : period.phase === 'classic' ? '#e65100' : '#2e7d32';
+                            return (
+                                <button
+                                    key={period.index}
+                                    onClick={() => onChangeState(prev => ({ ...prev, activeStep: period.index }))}
+                                    style={{
+                                        padding: '0.45rem 0.5rem',
+                                        borderRadius: '6px',
+                                        border: isActive ? `2px solid ${phaseColor}` : '1px solid #ccc',
+                                        backgroundColor: isActive ? phaseColor : '#fff',
+                                        color: isActive ? '#fff' : '#333',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.78rem',
+                                        cursor: 'pointer',
+                                        textAlign: 'center',
+                                        boxShadow: isActive ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
+                                    }}
+                                >
+                                    {period.shortLabel}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#333', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <span>
+                            <strong>選択中: {currentPeriod.label}</strong> — {currentPeriod.timingDesc}
+                        </span>
+                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button
+                                onClick={() => onChangeState(prev => ({ ...prev, activeStep: Math.max(0, activeStep - 1) }))}
+                                disabled={activeStep <= 0}
+                                style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: activeStep <= 0 ? '#eee' : '#fff', color: '#333', cursor: activeStep <= 0 ? 'default' : 'pointer' }}
+                            >
+                                ◀ 前の時期
+                            </button>
+                            <button
+                                onClick={() => onChangeState(prev => ({ ...prev, activeStep: Math.min(5, activeStep + 1) }))}
+                                disabled={activeStep >= 5}
+                                style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: activeStep >= 5 ? '#eee' : '#fff', color: '#333', cursor: activeStep >= 5 ? 'default' : 'pointer' }}
+                            >
+                                次の時期 ▶
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 5演目の現在Lv ＆ 現在時期の教えカード */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
                     {ENMOKU_LIST.map(meta => {
-                        const plan = state.enmoku[meta.key] || { level: 1, junior: '', classic: '', senior: '' };
-                        const isLowest = state.hasAzuma && plan.level === minLevel && plan.level < maxLevel;
-                        const juniorMeta = plan.junior ? JUNIOR_OSHIE_DATA[plan.junior] : null;
-                        const classicEffectText = getClassicOshieEffectText(plan.classic, plan.level);
-                        const seniorEffectText = getSeniorOshieEffectText(plan.senior, plan.level);
-                        const isFukutsu = plan.senior === '不屈';
-                        const fukutsuStatus = isFukutsu ? getFukutsuStatus(plan.level) : null;
+                        const lv = state.levels[meta.key] || 1;
+                        const currentOshie = currentPlacement[meta.key] || '';
+                        const prevOshie = prevPlacement ? prevPlacement[meta.key] : null;
+                        const isChangedFromPrev = prevOshie !== null && prevOshie !== currentOshie;
+
+                        const upgraded = isUpgradedOshie(currentOshie);
+                        const baseJunior: JuniorOshie | null = upgraded
+                            ? state.tenseiPairs[currentOshie]
+                            : (currentOshie ? (currentOshie as JuniorOshie) : null);
+                        const baseJuniorMeta = baseJunior ? JUNIOR_OSHIE_DATA[baseJunior] : null;
+                        const effectText = getOshieEffectByLevel(currentOshie, lv);
+                        const isFukutsu = currentOshie === '不屈';
+                        const fukutsuStatus = isFukutsu ? getFukutsuStatus(lv) : null;
 
                         return (
                             <div
@@ -544,198 +774,238 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                     backgroundColor: meta.bgLight,
                                     border: `2px solid ${meta.borderColor}`,
                                     borderRadius: '10px',
-                                    padding: '0.85rem 1rem',
+                                    padding: '0.75rem 0.9rem',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                    gap: '0.55rem',
                                 }}
                             >
-                                {/* 上段：演目名・上限・ターゲットバッジ・Lvカウンター */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.65rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                        <span style={{ fontSize: '1.2rem' }}>{meta.icon}</span>
-                                        <span style={{ fontWeight: 'bold', fontSize: '1.05rem', color: meta.color }}>
+                                {/* 上段：演目名 ＆ Lvステッパー */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'nowrap' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap' }}>
+                                        <span style={{ fontSize: '1.1rem' }}>{meta.icon}</span>
+                                        <span style={{ fontWeight: 'bold', fontSize: '0.98rem', color: meta.color }}>
                                             {meta.label}
                                         </span>
-                                        <span style={{ fontSize: '0.75rem', color: '#666', backgroundColor: 'rgba(255,255,255,0.8)', padding: '0.1rem 0.45rem', borderRadius: '4px', border: '1px solid rgba(0,0,0,0.08)' }}>
-                                            上限 {meta.cap}
+                                        <span style={{ fontSize: '0.72rem', color: '#555', fontWeight: 'bold' }}>
+                                            ({meta.enmokuName})
                                         </span>
-
-                                        {isLowest && (
-                                            <span
-                                                style={{
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 'bold',
-                                                    backgroundColor: '#ab47bc',
-                                                    color: '#fff',
-                                                    padding: '0.15rem 0.5rem',
-                                                    borderRadius: '12px',
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.2rem',
-                                                }}
-                                                title="現在最もLvが低いため、SSR吾妻のお出かけでLv+1される対象です"
-                                            >
-                                                🎯 お出かけ+1対象
-                                            </span>
-                                        )}
                                     </div>
 
-                                    {/* 演目Lv ＋/ー コントロール */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#fff', padding: '0.25rem 0.5rem', borderRadius: '8px', border: `1px solid ${meta.borderColor}` }}>
-                                        <span style={{ fontSize: '0.78rem', fontWeight: 'bold', color: '#555', marginRight: '0.2rem' }}>演目Lv</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: '#fff', padding: '0.2rem 0.4rem', borderRadius: '6px', border: `1px solid ${meta.borderColor}`, flexShrink: 0 }}>
                                         <button
                                             onClick={() => handleLevelChange(meta.key, -1)}
-                                            disabled={plan.level <= 1}
+                                            disabled={lv <= 1}
                                             style={{
-                                                width: '30px',
-                                                height: '30px',
-                                                borderRadius: '6px',
+                                                width: '26px',
+                                                height: '26px',
+                                                borderRadius: '4px',
                                                 border: '1px solid #ccc',
-                                                backgroundColor: plan.level <= 1 ? '#f5f5f5' : '#fff',
-                                                color: plan.level <= 1 ? '#bbb' : '#333',
+                                                backgroundColor: lv <= 1 ? '#f5f5f5' : '#fff',
+                                                color: lv <= 1 ? '#bbb' : '#333',
                                                 fontWeight: 'bold',
-                                                fontSize: '1rem',
-                                                cursor: plan.level <= 1 ? 'default' : 'pointer',
+                                                cursor: lv <= 1 ? 'default' : 'pointer',
+                                                padding: 0,
                                             }}
                                         >
                                             -
                                         </button>
-                                        <span
-                                            style={{
-                                                fontSize: '1.15rem',
-                                                fontWeight: '900',
-                                                minWidth: '2.6rem',
-                                                textAlign: 'center',
-                                                color: plan.level === maxLevel ? '#d32f2f' : '#222',
-                                            }}
-                                        >
-                                            {plan.level}
-                                            <span style={{ fontSize: '0.7rem', fontWeight: 'normal', color: '#777' }}>/{maxLevel}</span>
+                                        <span style={{ fontSize: '1rem', fontWeight: '900', minWidth: '2.5rem', textAlign: 'center', color: lv === maxLevel ? '#d32f2f' : '#222' }}>
+                                            Lv.{lv}
                                         </span>
                                         <button
                                             onClick={() => handleLevelChange(meta.key, 1)}
-                                            disabled={plan.level >= maxLevel}
+                                            disabled={lv >= maxLevel}
                                             style={{
-                                                width: '30px',
-                                                height: '30px',
-                                                borderRadius: '6px',
+                                                width: '26px',
+                                                height: '26px',
+                                                borderRadius: '4px',
                                                 border: '1px solid #ccc',
-                                                backgroundColor: plan.level >= maxLevel ? '#f5f5f5' : meta.color,
-                                                color: plan.level >= maxLevel ? '#bbb' : '#fff',
+                                                backgroundColor: lv >= maxLevel ? '#f5f5f5' : meta.color,
+                                                color: lv >= maxLevel ? '#bbb' : '#fff',
                                                 fontWeight: 'bold',
-                                                fontSize: '1rem',
-                                                cursor: plan.level >= maxLevel ? 'default' : 'pointer',
+                                                cursor: lv >= maxLevel ? 'default' : 'pointer',
+                                                padding: 0,
                                             }}
                                         >
                                             +
                                         </button>
-                                        {plan.level < maxLevel && (
-                                            <button
-                                                onClick={() => handleLevelChange(meta.key, maxLevel - plan.level)}
-                                                style={{
-                                                    fontSize: '0.7rem',
-                                                    padding: '0.25rem 0.4rem',
-                                                    borderRadius: '4px',
-                                                    border: '1px solid #ffb74d',
-                                                    backgroundColor: '#fff8e1',
-                                                    color: '#e65100',
-                                                    fontWeight: 'bold',
-                                                    cursor: 'pointer',
-                                                }}
-                                                title={`一気にLv.${maxLevel}にします`}
-                                            >
-                                                MAX
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={() => handleLevelChange(meta.key, maxLevel - lv)}
+                                            disabled={lv >= maxLevel}
+                                            style={{
+                                                fontSize: '0.65rem',
+                                                padding: '0.2rem 0.35rem',
+                                                borderRadius: '4px',
+                                                border: lv >= maxLevel ? '1px solid #ddd' : '1px solid #ffb74d',
+                                                backgroundColor: lv >= maxLevel ? '#f5f5f5' : '#fff8e1',
+                                                color: lv >= maxLevel ? '#bbb' : '#e65100',
+                                                fontWeight: 'bold',
+                                                cursor: lv >= maxLevel ? 'default' : 'pointer',
+                                            }}
+                                        >
+                                            MAX
+                                        </button>
                                     </div>
                                 </div>
 
-                                {/* 中段：ジュニア・クラシック・シニア 3期の教えプルダウン */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
-                                    {/* ジュニア期 */}
-                                    <div style={{ backgroundColor: 'rgba(255,255,255,0.9)', padding: '0.45rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.08)' }}>
-                                        <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 'bold', color: '#666', marginBottom: '0.2rem' }}>
-                                            ① ジュニア期（基本5種）
-                                        </label>
-                                        <select
-                                            value={plan.junior}
-                                            onChange={e => handleOshieChange(meta.key, 'junior', e.target.value as JuniorOshie)}
-                                            style={{ width: '100%', padding: '0.3rem', borderRadius: '4px', border: '1px solid #ccc', fontSize: '0.85rem', fontWeight: 'bold', backgroundColor: '#fff', color: '#333' }}
-                                        >
-                                            <option value="">-- 未選択 --</option>
-                                            {JUNIOR_OPTIONS.map(opt => (
-                                                <option key={opt} value={opt}>
-                                                    {opt}の教え
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {juniorMeta && (
-                                            <div style={{ marginTop: '0.3rem', fontSize: '0.73rem', fontWeight: 'bold', color: juniorMeta.color }}>
-                                                永続: {juniorMeta.badgeText}
-                                            </div>
+                                {/* 下段：現在時期のセット教え ＆ 効果表示 */}
+                                <div style={{ backgroundColor: 'rgba(255,255,255,0.92)', padding: '0.5rem 0.6rem', borderRadius: '6px', border: isFukutsu ? '2px solid #2e7d32' : '1px solid rgba(0,0,0,0.08)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                                        <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#555' }}>
+                                            {currentPeriod.shortLabel} のセット教え:
+                                        </span>
+                                        {isChangedFromPrev && (
+                                            <span style={{ fontSize: '0.68rem', backgroundColor: '#fff3e0', color: '#e65100', border: '1px solid #ffb74d', padding: '0.05rem 0.35rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                                🔄 前回({prevOshie})から変更
+                                            </span>
                                         )}
                                     </div>
+                                    <select
+                                        value={currentOshie}
+                                        onChange={e => handlePlacementChange(activeStep, meta.key, e.target.value as AnyOshie)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.35rem',
+                                            borderRadius: '4px',
+                                            border: '1px solid #bbb',
+                                            fontSize: '0.88rem',
+                                            fontWeight: 'bold',
+                                            backgroundColor: '#fff',
+                                            color: '#222',
+                                        }}
+                                    >
+                                        <option value="">-- 未選択 --</option>
+                                        {availableForCurrentStep.map(opt => (
+                                            <option key={opt} value={opt}>
+                                                {isUpgradedOshie(opt)
+                                                    ? `★${opt}の教え（転成元: ${state.tenseiPairs[opt]}）`
+                                                    : `${opt}の教え（未転成）`}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                                    {/* クラシック期 */}
-                                    <div style={{ backgroundColor: 'rgba(255,255,255,0.9)', padding: '0.45rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.08)' }}>
-                                        <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 'bold', color: '#666', marginBottom: '0.2rem' }}>
-                                            ② クラシック期（1月前〜）
-                                        </label>
-                                        <select
-                                            value={plan.classic}
-                                            onChange={e => handleOshieChange(meta.key, 'classic', e.target.value as ClassicOshie)}
-                                            style={{ width: '100%', padding: '0.3rem', borderRadius: '4px', border: '1px solid #ccc', fontSize: '0.85rem', fontWeight: 'bold', backgroundColor: '#fff', color: '#333' }}
+                                    {effectText && (
+                                        <div
+                                            style={{
+                                                marginTop: '0.35rem',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 'bold',
+                                                color: fukutsuStatus?.isMax ? '#d32f2f' : isFukutsu ? '#1b5e20' : upgraded ? '#bf360c' : '#333',
+                                            }}
                                         >
-                                            <option value="">-- 未選択 --</option>
-                                            {CLASSIC_OPTIONS.map(opt => (
-                                                <option key={opt} value={opt}>
-                                                    {opt}の教え ({opt === '特化' ? '能力&上限' : '追加稽古率'})
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {classicEffectText && (
-                                            <div style={{ marginTop: '0.3rem', fontSize: '0.73rem', fontWeight: 'bold', color: plan.classic === '特化' ? '#c62828' : '#ef6c00' }}>
-                                                現在(Lv.{plan.level}): {classicEffectText}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* シニア期 */}
-                                    <div style={{ backgroundColor: 'rgba(255,255,255,0.9)', padding: '0.45rem 0.6rem', borderRadius: '6px', border: isFukutsu ? '2px solid #2e7d32' : '1px solid rgba(0,0,0,0.08)' }}>
-                                        <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 'bold', color: '#666', marginBottom: '0.2rem' }}>
-                                            ③ シニア期（1月前〜）
-                                        </label>
-                                        <select
-                                            value={plan.senior}
-                                            onChange={e => handleOshieChange(meta.key, 'senior', e.target.value as SeniorOshie)}
-                                            style={{ width: '100%', padding: '0.3rem', borderRadius: '4px', border: '1px solid #ccc', fontSize: '0.85rem', fontWeight: 'bold', backgroundColor: '#fff', color: '#333' }}
-                                        >
-                                            <option value="">-- 未選択 --</option>
-                                            {SENIOR_OPTIONS.map(opt => (
-                                                <option key={opt} value={opt}>
-                                                    {opt}の教え ({opt === '不屈' ? '失敗0%条件' : opt === '協力' ? '分身&友情' : 'サブ&演目効果'})
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {seniorEffectText && (
-                                            <div
-                                                style={{
-                                                    marginTop: '0.3rem',
-                                                    fontSize: '0.74rem',
-                                                    fontWeight: 'bold',
-                                                    color: fukutsuStatus?.isMax ? '#d32f2f' : isFukutsu ? '#1b5e20' : plan.senior === '協力' ? '#1565c0' : '#e65100',
-                                                }}
-                                            >
-                                                {seniorEffectText}
-                                            </div>
-                                        )}
-                                    </div>
+                                            {effectText}
+                                        </div>
+                                    )}
+                                    {upgraded && baseJuniorMeta && (
+                                        <div style={{ marginTop: '0.15rem', fontSize: '0.7rem', color: baseJuniorMeta.color, fontWeight: 'bold' }}>
+                                            ＋転成効果({baseJunior}): {baseJuniorMeta.badgeText}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
                     })}
                 </div>
+
+                {/* 全6回 × 5演目「教え配置スケジュール一覧マトリクス表」 */}
+                <div style={{ overflowX: 'auto' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#333', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span>📋 全6回「どの練習にどの教えをセットするか」一覧スケジュール表</span>
+                        <span style={{ fontSize: '0.74rem', color: '#666', fontWeight: 'normal' }}>
+                            ※時期名をクリックすると現在時期が切り替わります（同じ行で同じ教えを選ぶと自動で場所が入れ替わります）
+                        </span>
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', minWidth: '620px' }}>
+                        <thead>
+                            <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ccc' }}>
+                                <th style={{ padding: '0.45rem', textAlign: 'left', width: '165px' }}>時期（全6回）</th>
+                                {ENMOKU_LIST.map(meta => (
+                                    <th key={meta.key} style={{ padding: '0.45rem 0.25rem', textAlign: 'center', color: meta.color }}>
+                                        {meta.icon} {meta.label}<br />
+                                        <span style={{ fontSize: '0.68rem', color: '#666', fontWeight: 'normal' }}>({meta.enmokuName})</span>
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {SHUNTAISAI_PERIODS.map(period => {
+                                const isCurrentRow = period.index === activeStep;
+                                const rowPlacement = state.placements[period.index] || { speed: '', stamina: '', power: '', guts: '', wisdom: '' };
+                                const prevRowPlacement = period.index > 0 ? state.placements[period.index - 1] : null;
+                                const options = getAvailableOshieForStep(period.index, state.tenseiPairs);
+
+                                return (
+                                    <tr
+                                        key={period.index}
+                                        style={{
+                                            backgroundColor: isCurrentRow ? '#fff8e1' : period.index % 2 === 0 ? '#fff' : '#fafafa',
+                                            borderBottom: '1px solid #e0e0e0',
+                                            outline: isCurrentRow ? '2px solid #ff9800' : 'none',
+                                        }}
+                                    >
+                                        <td
+                                            onClick={() => onChangeState(prev => ({ ...prev, activeStep: period.index }))}
+                                            style={{ padding: '0.5rem', cursor: 'pointer', fontWeight: 'bold', color: isCurrentRow ? '#e65100' : '#333' }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                <span>{isCurrentRow ? '👉' : ''}{period.label}</span>
+                                            </div>
+                                            {period.tenseiBadge && (
+                                                <div style={{ fontSize: '0.66rem', color: '#c62828', marginTop: '0.1rem' }}>
+                                                    {period.tenseiBadge}
+                                                </div>
+                                            )}
+                                        </td>
+                                        {ENMOKU_LIST.map(meta => {
+                                            const val = rowPlacement[meta.key] || '';
+                                            const prevVal = prevRowPlacement ? prevRowPlacement[meta.key] : null;
+                                            const changed = prevVal !== null && prevVal !== val;
+                                            const upgraded = isUpgradedOshie(val);
+
+                                            return (
+                                                <td key={meta.key} style={{ padding: '0.35rem 0.2rem', textAlign: 'center' }}>
+                                                    <select
+                                                        value={val}
+                                                        onChange={e => handlePlacementChange(period.index, meta.key, e.target.value as AnyOshie)}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '0.28rem 0.15rem',
+                                                            borderRadius: '4px',
+                                                            border: upgraded ? '1px solid #e65100' : '1px solid #ccc',
+                                                            backgroundColor: upgraded ? '#fff3e0' : '#fff',
+                                                            color: upgraded ? '#bf360c' : '#333',
+                                                            fontWeight: 'bold',
+                                                            fontSize: '0.75rem',
+                                                        }}
+                                                    >
+                                                        <option value="">-</option>
+                                                        {options.map(opt => (
+                                                            <option key={opt} value={opt}>
+                                                                {isUpgradedOshie(opt)
+                                                                    ? `★${opt}[${state.tenseiPairs[opt]}]`
+                                                                    : opt}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {changed && (
+                                                        <div style={{ fontSize: '0.64rem', color: '#d84315', marginTop: '0.1rem', fontWeight: 'bold' }}>
+                                                            🔄前:{prevVal}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            {/* 4. 育成完了＆記録セクション (LGランク対応・TSV出力) */}
+            {/* 5. 育成完了＆記録セクション (LGランク対応・TSV出力) */}
             <div className="card record-card" style={{ marginTop: '1.5rem' }}>
                 <h3>📋 育成完了＆記録 (LGランク・スプレッドシート対応)</h3>
                 <div
@@ -833,8 +1103,8 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
 
                 <div className="record-output">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <span style={{ fontWeight: 'bold', fontSize: '0.88rem' }}>
-                            記録データ (TSV形式: ランク / 評価点 / SP / Jr.SP / Cl.SP / サポカ / 5演目ルート＆最終Lv)
+                        <span style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>
+                            記録データ (TSV形式: ランク / 評価点 / SP / Jr.SP / Cl.SP / サポカ / 転成ペア / 5演目最終配置＆Lv)
                         </span>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button
@@ -887,14 +1157,13 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                 </div>
             </div>
 
-            {/* 5. 折りたたみ攻略チートシート */}
+            {/* 6. 折りたたみ攻略チートシート */}
             <div className="bd-effects-toggle" style={{ marginTop: '1.25rem' }}>
                 <button className="bd-effects-btn" onClick={() => setShowCheatSheet(!showCheatSheet)}>
                     {showCheatSheet ? '▲ 「教え＆転成」早見データバンクを隠す' : '▼ 「教え＆転成」早見データバンク・攻略チートシートを開く'}
                 </button>
                 {showCheatSheet && (
                     <div className="bd-effects-content full-details" style={{ marginTop: '0.75rem' }}>
-                        {/* タブ切り替え */}
                         <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                             <button
                                 onClick={() => setCheatSheetTab(1)}
@@ -909,7 +1178,7 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                     color: cheatSheetTab === 1 ? '#fff' : '#444',
                                 }}
                             >
-                                ① ジュニア期 (基本5種＆永続効果)
+                                ① 初期5種＆転成時の引き継ぎ効果
                             </button>
                             <button
                                 onClick={() => setCheatSheetTab(2)}
@@ -924,7 +1193,7 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                     color: cheatSheetTab === 2 ? '#fff' : '#444',
                                 }}
                             >
-                                ② クラシック期 (特化・研鑽)
+                                ② Jr終了時転成 (特化・研鑽)
                             </button>
                             <button
                                 onClick={() => setCheatSheetTab(3)}
@@ -939,7 +1208,7 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                     color: cheatSheetTab === 3 ? '#fff' : '#444',
                                 }}
                             >
-                                ③ シニア期 (協力・不屈・両道)
+                                ③ Cl終了時転成 (協力・不屈・両道)
                             </button>
                         </div>
 
@@ -950,11 +1219,11 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                         <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd', textAlign: 'left' }}>
                                             <th style={{ padding: '0.5rem' }}>教え</th>
                                             <th style={{ padding: '0.5rem' }}>基本効果</th>
-                                            <th style={{ padding: '0.5rem', color: '#d84315' }}>転成後も残る永続「転成効果」</th>
+                                            <th style={{ padding: '0.5rem', color: '#d84315' }}>転成先へ引き継がれる永続「転成効果」</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {JUNIOR_OPTIONS.map(key => {
+                                        {ALL_JUNIOR_OSHIE.map(key => {
                                             const item = JUNIOR_OSHIE_DATA[key];
                                             return (
                                                 <tr key={key} style={{ borderBottom: '1px solid #eee' }}>
