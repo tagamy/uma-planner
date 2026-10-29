@@ -243,7 +243,7 @@ export const SHUNTAISAI_PRESETS: ShuntaisaiPreset[] = [
     {
         id: 'wisdom_tokka',
         name: '🧠 賢さ「得意率×特化」固定 ＆ スピ「体力×研鑽」型',
-        badge: '初日検証トレンド',
+        badge: '体力管理重視',
         description: 'Jr終了時に「得意率→特化」を賢さに固定して回復＆賢さカンストを安定させ、「体力→研鑽」で主練習の消費を抑えつつ追加稽古を連発させる注目テンプレ！',
         tenseiPairs: {
             '特化': '得意率',
@@ -271,28 +271,28 @@ export const SHUNTAISAI_PRESETS: ShuntaisaiPreset[] = [
         id: 'middle_long',
         name: '🏇 中・長距離 バランス（スピ2/スタ1/パワ1/賢1）',
         badge: '中・長距離',
-        description: 'Jr終了時に「得意率→特化」「絆→研鑽」、Cl終了時に「ヒント→協力」「体力→不屈」「助力→両道」へ転成する中・長距離向け構成！',
+        description: 'Jr終了時に「得意率→特化」「絆→研鑽」、Cl終了時に「ヒント→協力」「助力→不屈」「体力→両道」へ転成する中・長距離向け構成！',
         deckTypes: ['スピード', 'スピード', 'スタミナ', 'パワー', '賢さ'],
         tenseiPairs: {
             '特化': '得意率',
             '研鑽': '絆',
             '協力': 'ヒント',
-            '不屈': '体力',
-            '両道': '助力',
+            '不屈': '助力',
+            '両道': '体力',
         },
         placements: [
             // ① Jr.デビュー前
-            { speed: '絆', stamina: 'ヒント', power: '助力', guts: '体力', wisdom: '得意率' },
+            { speed: '絆', stamina: '体力', power: 'ヒント', guts: '助力', wisdom: '得意率' },
             // ② Jr.デビュー後（合宿前）
-            { speed: '得意率', stamina: '絆', power: 'ヒント', guts: '助力', wisdom: '体力' },
-            // ③ Jr.12月後半終了時（★2つ転成：特化[得意率]・研鑽[絆] ＋ 残り：ヒント・助力・体力）
-            { speed: '特化', stamina: '助力', power: 'ヒント', guts: '体力', wisdom: '研鑽' },
+            { speed: '体力', stamina: '絆', power: 'ヒント', guts: '助力', wisdom: '得意率' },
+            // ③ Jr.12月後半終了時（★2つ転成：特化[得意率]・研鑽[絆] ＋ 残り：体力・ヒント・助力）
+            { speed: '研鑽', stamina: '体力', power: 'ヒント', guts: '助力', wisdom: '特化' },
             // ④ Cl.6月後半終了時（合宿前）
-            { speed: '特化', stamina: '体力', power: '助力', guts: 'ヒント', wisdom: '研鑽' },
-            // ⑤ Cl.12月後半終了時（★残り3つ転成：協力[ヒント]・不屈[体力]・両道[助力]）
-            { speed: '協力', stamina: '特化', power: '両道', guts: '不屈', wisdom: '研鑽' },
+            { speed: '研鑽', stamina: '体力', power: 'ヒント', guts: '助力', wisdom: '特化' },
+            // ⑤ Cl.12月後半終了時（★残り3つ転成：協力[ヒント]・不屈[助力]・両道[体力]）
+            { speed: '協力', stamina: '両道', power: '研鑽', guts: '不屈', wisdom: '特化' },
             // ⑥ Sr.6月後半終了時（合宿前〜終盤）
-            { speed: '特化', stamina: '協力', power: '両道', guts: '研鑽', wisdom: '不屈' },
+            { speed: '協力', stamina: '両道', power: '研鑽', guts: '不屈', wisdom: '特化' },
         ],
     },
     {

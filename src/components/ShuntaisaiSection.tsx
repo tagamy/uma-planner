@@ -767,6 +767,57 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                         const isFukutsu = currentOshie === '不屈';
                         const fukutsuStatus = isFukutsu ? getFukutsuStatus(lv) : null;
 
+                        // 6回スケジュール表から、この演目のクラシック期・シニア期の予定転成教えを取得
+                        const plannedClassicOshie = state.placements[2]?.[meta.key] || state.placements[3]?.[meta.key] || '';
+                        const plannedSeniorOshie = state.placements[4]?.[meta.key] || state.placements[5]?.[meta.key] || '';
+
+                        interface OshiePreviewItem {
+                            periodLabel: string;
+                            oshie: UpgradedOshie;
+                            effectText: string;
+                            color: string;
+                            isMax: boolean;
+                        }
+
+                        const previewItems: OshiePreviewItem[] = [];
+
+                        // ジュニア期（step 0, 1）の場合：クラシック期とシニア期の予定転成教えをプレビュー
+                        if (activeStep <= 1) {
+                            if (plannedClassicOshie && isUpgradedOshie(plannedClassicOshie)) {
+                                previewItems.push({
+                                    periodLabel: 'Cl期',
+                                    oshie: plannedClassicOshie as UpgradedOshie,
+                                    effectText: getOshieEffectByLevel(plannedClassicOshie, lv),
+                                    color: plannedClassicOshie === '特化' ? '#c62828' : '#ef6c00',
+                                    isMax: lv === maxLevel,
+                                });
+                            }
+                            if (plannedSeniorOshie && isUpgradedOshie(plannedSeniorOshie)) {
+                                const isFuk = plannedSeniorOshie === '不屈';
+                                const fStatus = isFuk ? getFukutsuStatus(lv) : null;
+                                previewItems.push({
+                                    periodLabel: 'Sr期',
+                                    oshie: plannedSeniorOshie as UpgradedOshie,
+                                    effectText: getOshieEffectByLevel(plannedSeniorOshie, lv),
+                                    color: fStatus?.isMax ? '#d32f2f' : isFuk ? '#2e7d32' : plannedSeniorOshie === '協力' ? '#1565c0' : '#e65100',
+                                    isMax: lv === maxLevel,
+                                });
+                            }
+                        } else if (activeStep >= 2 && activeStep <= 3) {
+                            // クラシック期（step 2, 3）の場合：シニア期の予定転成教えをプレビュー（現在と異なる場合）
+                            if (plannedSeniorOshie && isUpgradedOshie(plannedSeniorOshie) && plannedSeniorOshie !== currentOshie) {
+                                const isFuk = plannedSeniorOshie === '不屈';
+                                const fStatus = isFuk ? getFukutsuStatus(lv) : null;
+                                previewItems.push({
+                                    periodLabel: 'Sr期予定',
+                                    oshie: plannedSeniorOshie as UpgradedOshie,
+                                    effectText: getOshieEffectByLevel(plannedSeniorOshie, lv),
+                                    color: fStatus?.isMax ? '#d32f2f' : isFuk ? '#2e7d32' : plannedSeniorOshie === '協力' ? '#1565c0' : '#e65100',
+                                    isMax: lv === maxLevel,
+                                });
+                            }
+                        }
+
                         return (
                             <div
                                 key={meta.key}
@@ -886,21 +937,79 @@ export const ShuntaisaiSection: React.FC<ShuntaisaiSectionProps> = ({
                                         ))}
                                     </select>
 
+                                    {/* 現在セット教えの効果表示 */}
                                     {effectText && (
                                         <div
                                             style={{
                                                 marginTop: '0.35rem',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 'bold',
-                                                color: fukutsuStatus?.isMax ? '#d32f2f' : isFukutsu ? '#1b5e20' : upgraded ? '#bf360c' : '#333',
+                                                fontSize: upgraded ? '0.76rem' : '0.73rem',
+                                                fontWeight: upgraded ? 'bold' : 'normal',
+                                                color: fukutsuStatus?.isMax ? '#d32f2f' : isFukutsu ? '#1b5e20' : upgraded ? '#bf360c' : '#444',
+                                                lineHeight: 1.4,
                                             }}
                                         >
+                                            {upgraded && (
+                                                <span
+                                                    style={{
+                                                        backgroundColor: fukutsuStatus?.isMax ? '#ffebee' : '#fff3e0',
+                                                        color: fukutsuStatus?.isMax ? '#d32f2f' : '#e65100',
+                                                        padding: '0.1rem 0.35rem',
+                                                        borderRadius: '4px',
+                                                        fontSize: '0.68rem',
+                                                        marginRight: '0.3rem',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    現在 Lv.{lv}効果
+                                                </span>
+                                            )}
                                             {effectText}
                                         </div>
                                     )}
                                     {upgraded && baseJuniorMeta && (
-                                        <div style={{ marginTop: '0.15rem', fontSize: '0.7rem', color: baseJuniorMeta.color, fontWeight: 'bold' }}>
+                                        <div style={{ marginTop: '0.15rem', fontSize: '0.68rem', color: baseJuniorMeta.color, fontWeight: 'bold' }}>
                                             ＋転成効果({baseJunior}): {baseJuniorMeta.badgeText}
+                                        </div>
+                                    )}
+
+                                    {/* 将来の転成予定のLv連動効果プレビュー */}
+                                    {previewItems.length > 0 && (
+                                        <div
+                                            style={{
+                                                marginTop: '0.45rem',
+                                                paddingTop: '0.35rem',
+                                                borderTop: '1px dashed rgba(0,0,0,0.15)',
+                                                backgroundColor: '#fafafa',
+                                                padding: '0.35rem 0.45rem',
+                                                borderRadius: '5px',
+                                                border: '1px solid #f0f0f0',
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 'bold',
+                                                    color: '#666',
+                                                    marginBottom: '0.2rem',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                }}
+                                            >
+                                                <span>🔮 転成後のLv.{lv}効果（連動中）:</span>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                                {previewItems.map(item => (
+                                                    <div key={item.periodLabel} style={{ fontSize: '0.72rem', lineHeight: 1.35 }}>
+                                                        <span style={{ fontWeight: 'bold', color: item.color, marginRight: '0.25rem' }}>
+                                                            [{item.periodLabel} ★{item.oshie}]
+                                                        </span>
+                                                        <span style={{ fontWeight: 'bold', color: item.color }}>
+                                                            {item.effectText}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
